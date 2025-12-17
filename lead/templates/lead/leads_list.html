@@ -1,0 +1,46 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Leads{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Leads</h1>
+        <a href="{% url 'add_lead' %}"
+           class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+            + Add Lead
+        </a>
+    </div>
+
+    {% if leads %}
+    <div class="overflow-x-auto bg-white rounded-xl shadow">
+        <table class="w-full border-collapse">
+            <thead class="bg-gray-300">
+                <tr>
+                    <th class="text-left p-4">Name</th>
+                    <th class="text-left p-4">Email</th>
+                    <th class="text-left p-4">Priority</th>
+                    <th class="text-left p-4">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lead in leads %}
+                <tr class="{% cycle 'bg-white' 'bg-gray-100' %} border-t hover:bg-teal-50">
+                    <td class="p-4 font-medium">
+                        <a href="{% url 'leads_detail' lead.id %}">
+                            {{ lead.name }}
+                        </a>
+                    </td>
+                    <td class="p-4">{{ lead.email }}</td>
+                    <td class="p-4 capitalize">{{ lead.priority }}</td>
+                    <td class="p-4 capitalize">{{ lead.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="text-gray-500">No leads yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

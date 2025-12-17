@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Clients{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Clients</h1>
+        <a href="{% url 'clients_add' %}"
+           class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+            + Add Client
+        </a>
+    </div>
+
+    {% if clients %}
+    <div class="overflow-x-auto bg-white rounded-xl shadow">
+        <table class="w-full border-collapse">
+            <thead class="bg-gray-300">
+                <tr>
+                    <th class="text-left p-4">Name</th>
+                    <th class="text-left p-4">Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                <tr class="{% cycle 'bg-white' 'bg-gray-100' %} border-t hover:bg-teal-50">
+                    <td class="p-4 font-medium">
+                        <a href="{% url 'clients_detail' client.id %}">
+                            {{ client.name }}
+                        </a>
+                    </td>
+                    <td class="p-4">{{ client.email }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="text-gray-500">No Clients yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
