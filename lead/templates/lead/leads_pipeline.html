@@ -1,0 +1,109 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Sales Pipeline{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <h1 class="text-2xl font-semibold mb-6">Sales Pipeline</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {% for stage, leads in pipeline.items %}
+        <div class="bg-gray-100 rounded-xl p-4 min-h-[300px]"
+             data-status="{{ stage }}"
+             ondragover="allowDrop(event)"
+             ondrop="dropLead(event)">
+
+            <h2 class="text-sm font-semibold mb-3 capitalize">
+                {{ stage }}
+                <span class="text-gray-500 text-xs">
+                    ({{ leads.count }})
+                </span>
+            </h2>
+
+            <div class="space-y-3 leads-container">
+                {% for lead in leads %}
+                <div class="lead-card bg-white rounded-lg p-3 shadow text-sm cursor-move"
+                     draggable="true"
+                     data-lead-id="{{ lead.id }}"
+                     ondragstart="dragStart(event)">
+
+                    <p class="font-medium">{{ lead.name }}</p>
+                    <p class="text-gray-500 text-xs">{{ lead.email }}</p>
+
+                    <div class="mt-2 flex justify-between text-xs">
+                        <span class="capitalize">{{ lead.priority }}</span>
+                        <a href="{% url 'leads_detail' lead.id %}" class="text-teal-600">
+                            View
+                        </a>
+                    </div>
+
+                </div>
+                {% empty %}
+                <p class="text-xs text-gray-400">No leads</p>
+                {% endfor %}
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let draggedEl = null;
+let draggedLeadId = null;
+
+function getCookie(name) {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name + '='))
+        ?.split('=')[1];
+}
+
+function dragStart(event) {
+    draggedEl = event.currentTarget;
+    draggedLeadId = draggedEl.dataset.leadId;
+}
+
+function allowDrop(event) {
+    event.preventDefault();
+}
+
+function dropLead(event) {
+    event.preventDefault();
+
+    const column = event.target.closest('[data-status]');
+    if (!column || !draggedEl) return;
+
+    const container = column.querySelector('.leads-container');
+    if (!container) return;
+
+    container.appendChild(draggedEl);
+
+    updateAllCounters();
+
+    fetch(`/dashboard/leads/pipeline/${draggedLeadId}/update/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            status: column.dataset.status
+        })
+    });
+}
+
+function updateAllCounters() {
+    document.querySelectorAll('[data-status]').forEach(column => {
+        const count = column.querySelectorAll('.lead-card').length;
+        const counterSpan = column.querySelector('h2 span');
+        if (counterSpan) {
+            counterSpan.textContent = `(${count})`;
+        }
+    });
+}
+
+</script>
+{% endblock %}

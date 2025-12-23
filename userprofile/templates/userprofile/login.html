@@ -1,19 +1,83 @@
 {% extends 'core/base.html' %}
-
 {% block title %}Login{% endblock %}
 
 {% block content %}
-    
-    <h1 class="text-lg py-4">
-        Log in    
-    </h1>
+<div class="flex items-center justify-center min-h-[85vh] px-4 py-12">
 
-    <form method="post" action="." class="">
-        {% csrf_token %}
+    <div class="w-full max-w-md bg-white border border-zinc-200 rounded-lg shadow-sm p-8 sm:p-10">
 
-        {{ form.as_p }}
+        <div class="flex flex-col space-y-2 text-center mb-8">
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-950">
+                Welcome Back
+            </h1>
+            <p class="text-sm text-zinc-500">
+                Enter your credentials to access your account
+            </p>
+        </div>
 
-        <button class="py-4 px-8 bg-teal-500 text-white rounded-xl">Submit</button>
-    </form>
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
 
+            <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-zinc-800">
+                    Username
+                </label>
+                <input type="text" name="username" required
+                    class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 transition-all outline-none"
+                    placeholder="Enter your username">
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="text-sm font-medium leading-none text-zinc-800">
+                        Password
+                    </label>
+                    <a href="{% url 'forgot_password' %}" class="text-xs text-zinc-500 hover:text-zinc-950 transition-colors">
+                        Forgot password?
+                    </a>
+                </div>
+                <input type="password" name="password" required
+                    class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 transition-all outline-none"
+                    placeholder="••••••••">
+            </div>
+
+            {% if form.errors %}
+                <div class="p-3 rounded-md bg-red-50 border border-red-100 flex items-center gap-2 text-xs text-red-600 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Invalid username or password.
+                </div>
+            {% endif %}
+
+            <button type="submit"
+                class="inline-flex items-center justify-center w-full h-10 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-md transition-all shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 cursor-pointer active:scale-[0.98]">
+                Log In
+            </button>
+        </form>
+
+        <div class="relative my-8">
+            <div class="absolute inset-0 flex items-center">
+                <span class="w-full border-t border-zinc-200"></span>
+            </div>
+            <div class="relative flex justify-center text-xs uppercase">
+                <span class="bg-white px-2 text-zinc-500 font-medium">Or continue with</span>
+            </div>
+        </div>
+
+        <a href="{% url 'login_otp' %}"
+            class="inline-flex items-center justify-center w-full h-10 px-4 py-2 bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-950 text-sm font-medium rounded-md transition-colors shadow-sm cursor-pointer">
+            <svg class="mr-2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+            Login with OTP
+        </a>
+
+        <div class="mt-8 text-center pt-6 border-t border-zinc-100">
+            <p class="text-sm text-zinc-500">
+                Don’t have an account? 
+                <a href="{% url 'signup' %}" class="font-semibold text-zinc-950 hover:underline underline-offset-4 decoration-zinc-300">
+                    Sign up
+                </a>
+            </p>
+        </div>
+
+    </div>
+</div>
 {% endblock %}

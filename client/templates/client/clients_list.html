@@ -5,38 +5,41 @@
 {% block content %}
 <div class="p-6">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Clients</h1>
+        <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Clients</h1>
         <a href="{% url 'clients_add' %}"
-           class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+           class="px-4 py-2 bg-zinc-900 text-white text-sm font-medium rounded-md hover:bg-zinc-800 transition shadow-sm cursor-pointer">
             + Add Client
         </a>
     </div>
 
     {% if clients %}
-    <div class="overflow-x-auto bg-white rounded-xl shadow">
+    <div class="overflow-hidden bg-white rounded-lg border border-zinc-200 shadow-sm">
         <table class="w-full border-collapse">
-            <thead class="bg-gray-300">
+            <thead class="bg-zinc-50 border-b border-zinc-200">
                 <tr>
-                    <th class="text-left p-4">Name</th>
-                    <th class="text-left p-4">Email</th>
+                    <th class="text-left p-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Name</th>
+                    <th class="text-left p-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Email</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="text-sm">
                 {% for client in clients %}
-                <tr class="{% cycle 'bg-white' 'bg-gray-100' %} border-t hover:bg-teal-50">
-                    <td class="p-4 font-medium">
-                        <a href="{% url 'clients_detail' client.id %}">
+                <tr class="border-b border-zinc-100 last:border-0 hover:bg-zinc-50 transition-colors">
+                    <td class="p-4 font-medium text-zinc-900">
+                        <a href="{% url 'clients_detail' client.id %}" class="hover:underline underline-offset-4 decoration-zinc-300">
                             {{ client.name }}
                         </a>
                     </td>
-                    <td class="p-4">{{ client.email }}</td>
+                    <td class="p-4 text-zinc-600">{{ client.email }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     {% else %}
-        <p class="text-gray-500">No Clients yet.</p>
+    <div class="flex flex-col items-center justify-center py-12 border-2 border-dashed border-zinc-200 rounded-xl bg-zinc-50/30">
+        <p class="text-zinc-500 text-sm">No clients found.</p>
+        <p class="text-zinc-400 text-xs mt-1">Converted leads will appear here automatically.</p>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,137 @@
+{% extends "core/base.html" %}
+{% block title %}App Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-10">
+
+    <!-- HEADER -->
+    <div>
+        <h1 class="text-2xl font-semibold text-zinc-900">Application Settings</h1>
+        <p class="text-sm text-zinc-500">Branding & email configuration</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" x-data="imageViewer({{ settings.logo|yesno:'true,false' }})"
+        @input="handleOtherInput($event)" class="space-y-10">
+        {% csrf_token %}
+
+        <!-- BRANDING -->
+        <section class="bg-white border rounded-xl p-6 space-y-6">
+            <h2 class="text-lg font-medium">Branding</h2>
+
+            <div>
+                <label class="text-sm font-medium">App Name</label>
+                <input type="text" name="app_name" value="{{ settings.app_name }}"
+                    class="w-full h-10 border rounded-md px-3 text-sm">
+            </div>
+
+            <div>
+                <label class="text-sm font-medium">Logo</label>
+
+                <div class="mt-2">
+                    {% if settings.logo %}
+                    <template x-if="hasExistingLogo && !imageUrl">
+                        <div class="relative inline-block">
+                            <img src="{{ settings.logo.url }}" class="h-20 border rounded p-2">
+                            <button type="button" @click="removeExistingLogo"
+                                class="absolute -top-2 -right-2 bg-zinc-900 text-white rounded-full px-2">✕</button>
+                        </div>
+                    </template>
+                    {% endif %}
+
+                    <template x-if="imageUrl">
+                        <div class="relative inline-block">
+                            <img :src="imageUrl" class="h-20 border rounded p-2">
+                            <button type="button" @click="clearNewImage"
+                                class="absolute -top-2 -right-2 bg-zinc-900 text-white rounded-full px-2">✕</button>
+                        </div>
+                    </template>
+
+                    <template x-if="!imageUrl && !hasExistingLogo">
+                        <div
+                            class="h-20 w-20 flex items-center justify-center border-dashed border rounded text-xs text-zinc-400">
+                            No Logo
+                        </div>
+                    </template>
+                </div>
+
+                <input type="file" name="logo" id="logoInput" class="mt-2 text-sm">
+                <input type="hidden" name="remove_logo" :value="removeLogo">
+            </div>
+        </section>
+
+        <!-- SMTP -->
+        <section class="bg-white border rounded-xl p-6 space-y-6">
+            <h2 class="text-lg font-medium">SMTP Email Settings</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input name="smtp_host" value="{{ settings.smtp_host }}" placeholder="SMTP Host" class="input">
+                <input name="smtp_port" value="{{ settings.smtp_port }}" placeholder="Port" class="input">
+                <input name="smtp_username" value="{{ settings.smtp_username }}" placeholder="Username" class="input">
+                <input name="smtp_password" value="{{ settings.smtp_password }}" placeholder="Password" type="password"
+                    class="input">
+                <input name="smtp_from_email" value="{{ settings.smtp_from_email }}" placeholder="From Email"
+                    class="input">
+            </div>
+
+            <div class="flex gap-6 text-sm">
+                <label><input type="checkbox" name="smtp_use_tls" {% if settings.smtp_use_tls %}checked{% endif %}>
+                    TLS</label>
+                <label><input type="checkbox" name="smtp_use_ssl" {% if settings.smtp_use_ssl %}checked{% endif %}>
+                    SSL</label>
+            </div>
+        </section>
+
+        <div class="flex justify-end">
+            <button class="px-6 py-2 bg-zinc-900 text-white rounded-md">
+                Save Settings
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function imageViewer(hasLogo) {
+        return {
+            imageUrl: '',
+            hasExistingLogo: hasLogo,
+            removeLogo: false,
+
+            fileChosen(e) {
+                const f = e.target.files[0]
+                if (!f) return
+                this.hasExistingLogo = false
+                this.removeLogo = true
+                const r = new FileReader()
+                r.onload = ev => this.imageUrl = ev.target.result
+                r.readAsDataURL(f)
+            },
+
+            clearNewImage() {
+                this.imageUrl = ''
+                document.getElementById('logoInput').value = ''
+            },
+
+            removeExistingLogo() {
+                this.hasExistingLogo = false
+                this.removeLogo = true
+            },
+
+            handleOtherInput(e) {
+                if (e.target.name !== 'logo' && this.imageUrl) {
+                    this.clearNewImage()
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    .input {
+        height: 2.5rem;
+        border: 1px solid #e4e4e7;
+        border-radius: .375rem;
+        padding: 0 .75rem;
+        font-size: .875rem;
+    }
+</style>
+{% endblock %}

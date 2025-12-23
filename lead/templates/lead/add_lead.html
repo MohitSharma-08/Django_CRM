@@ -12,7 +12,12 @@
 
         {{ form.as_p}}
 
-        <button class="py-4 px-8 bg-teal-500 text-white rounded-xl">Submit</button>
+        <button class="mt-4 py-4 px-8 bg-teal-500 text-white rounded-xl">Submit</button>
+
+        <a href="{% url 'leads_list' %}"
+        class="mt-4 py-4 px-8 bg-red-500 text-white rounded-xl">
+            Cancel
+        </a>
     </form>
 </div>
 

@@ -1,0 +1,101 @@
+{% extends 'core/base.html' %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-10 px-4">
+    <div class="flex flex-col space-y-2 mb-8">
+        <h1 class="text-2xl font-bold tracking-tight text-zinc-950">Your Profile</h1>
+        <p class="text-sm text-zinc-500">Manage your account settings and profile information.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-8" x-data="profileImageHandler()">
+        {% csrf_token %}
+
+        <div class="space-y-4">
+            <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-zinc-800">Username</label>
+                <input type="text" name="username" value="{{ request.user.username }}" 
+                    class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 transition-all outline-none">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-zinc-800">Email</label>
+                <input type="email" name="email" value="{{ request.user.email }}" 
+                    class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 transition-all outline-none">
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <label class="text-sm font-medium leading-none text-zinc-800">Profile Image</label>
+            
+            <div class="flex items-center gap-6">
+                <div class="relative group">
+                    <div class="h-24 w-24 rounded-full border-2 border-zinc-100 overflow-hidden bg-zinc-50">
+                        <template x-if="!imageUrl">
+                            {% if request.user.account_profile.avatar %}
+                                <img src="{{ request.user.account_profile.avatar.url }}" class="h-full w-full object-cover">
+                            {% else %}
+                                <div class="h-full w-full flex items-center justify-center text-zinc-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </div>
+                            {% endif %}
+                        </template>
+                        <template x-if="imageUrl">
+                            <img :src="imageUrl" class="h-full w-full object-cover">
+                        </template>
+                    </div>
+
+                    <button type="button" x-show="imageUrl" @click="clearImage"
+                        class="absolute -top-1 -right-1 bg-zinc-900 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+
+                <div class="flex-1">
+                    <input type="file" name="avatar" id="avatarInput" accept="image/*" @change="fileChosen"
+                        class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-zinc-100 file:text-zinc-900 hover:file:bg-zinc-200 cursor-pointer">
+                    <p class="mt-2 text-[11px] text-zinc-400">JPG, PNG or GIF. Max size 2MB.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-t border-zinc-100 pt-8 space-y-4">
+            <h2 class="text-sm font-semibold text-zinc-950 uppercase tracking-wider">Change Password</h2>
+            <div class="grid gap-3">
+                <input type="password" name="old_password" placeholder="Current password" 
+                    class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 transition-all">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="password" name="new_password" placeholder="New password" 
+                        class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 transition-all">
+                    <input type="password" name="confirm_password" placeholder="Confirm new password" 
+                        class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 transition-all">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="inline-flex items-center justify-center px-8 h-10 bg-zinc-900 text-white text-sm font-medium rounded-md hover:bg-zinc-800 transition-all shadow active:scale-[0.98] cursor-pointer">
+            Save Changes
+        </button>
+    </form>
+</div>
+
+<script>
+    function profileImageHandler() {
+        return {
+            imageUrl: '',
+            fileChosen(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = e => this.imageUrl = e.target.result;
+            },
+            clearImage() {
+                this.imageUrl = '';
+                document.getElementById('avatarInput').value = '';
+            }
+        }
+    }
+</script>
+{% endblock %}

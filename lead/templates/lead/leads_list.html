@@ -6,41 +6,86 @@
 <div class="p-6">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Leads</h1>
-        <a href="{% url 'add_lead' %}"
-           class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
-            + Add Lead
-        </a>
+        <div class="flex gap-x-2"> 
+            <a href="{% url 'add_lead' %}" class="px-4 py-2 bg-zinc-900 text-white text-sm font-medium rounded-md hover:bg-zinc-800 transition shadow-sm">
+                + Add Lead
+            </a>
+            <a href="{% url 'upload_leads' %}" class="px-4 py-2 bg-white border border-zinc-200 text-zinc-900 text-sm font-medium rounded-md hover:bg-zinc-50 transition shadow-sm">
+                Upload Leads
+            </a>
+        </div>
     </div>
 
     {% if leads %}
-    <div class="overflow-x-auto bg-white rounded-xl shadow">
+    <div class="overflow-x-auto bg-white rounded-xl border border-zinc-200 shadow-sm">
         <table class="w-full border-collapse">
-            <thead class="bg-gray-300">
+            <thead class="bg-zinc-50 border-b border-zinc-200 text-zinc-500 text-sm">
                 <tr>
-                    <th class="text-left p-4">Name</th>
-                    <th class="text-left p-4">Email</th>
-                    <th class="text-left p-4">Priority</th>
-                    <th class="text-left p-4">Status</th>
+                    <th class="text-left p-4 font-medium">Name</th>
+                    <th class="text-left p-4 font-medium">Email</th>
+                    <th class="text-left p-4 font-medium">Priority</th>
+                    <th class="text-left p-4 font-medium">Status</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="text-sm">
                 {% for lead in leads %}
-                <tr class="{% cycle 'bg-white' 'bg-gray-100' %} border-t hover:bg-teal-50">
-                    <td class="p-4 font-medium">
-                        <a href="{% url 'leads_detail' lead.id %}">
+                <tr class="border-b border-zinc-100 hover:bg-zinc-50 transition-colors">
+                    <td class="p-4 font-medium text-zinc-900">
+                        <a href="{% url 'leads_detail' lead.id %}" class="hover:underline">
                             {{ lead.name }}
                         </a>
                     </td>
-                    <td class="p-4">{{ lead.email }}</td>
-                    <td class="p-4 capitalize">{{ lead.priority }}</td>
-                    <td class="p-4 capitalize">{{ lead.status }}</td>
+                    <td class="p-4 text-zinc-600">{{ lead.email }}</td>
+                    <td class="p-4 capitalize text-zinc-600">{{ lead.priority }}</td>
+                    <td class="p-4 capitalize text-zinc-600">{{ lead.status }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+
+        <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-zinc-200">
+            <div class="flex flex-1 justify-between sm:hidden">
+                {% if leads.has_previous %}
+                    <a href="?page={{ leads.previous_page_number }}" class="relative inline-flex items-center rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">Previous</a>
+                {% endif %}
+                {% if leads.has_next %}
+                    <a href="?page={{ leads.next_page_number }}" class="relative ml-3 inline-flex items-center rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">Next</a>
+                {% endif %}
+            </div>
+            
+            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-xs text-zinc-500">
+                        Showing page <span class="font-semibold text-zinc-900">{{ leads.number }}</span> of <span class="font-semibold text-zinc-900">{{ leads.paginator.num_pages }}</span>
+                    </p>
+                </div>
+                
+                <nav class="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">
+                    {% if leads.has_previous %}
+                        <a href="?page={{ leads.previous_page_number }}" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-zinc-400 ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50 focus:z-20 focus:outline-offset-0">
+                            <span class="sr-only">Previous</span>
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" /></svg>
+                        </a>
+                    {% endif %}
+
+                    <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-zinc-900 ring-1 ring-inset ring-zinc-300 focus:outline-offset-0">
+                        {{ leads.number }}
+                    </span>
+
+                    {% if leads.has_next %}
+                        <a href="?page={{ leads.next_page_number }}" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-zinc-400 ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50 focus:z-20 focus:outline-offset-0">
+                            <span class="sr-only">Next</span>
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" /></svg>
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
     </div>
     {% else %}
-        <p class="text-gray-500">No leads yet.</p>
+    <div class="text-center py-12 border-2 border-dashed border-zinc-200 rounded-xl">
+        <p class="text-zinc-500 text-sm">No leads found. Start by adding your first lead.</p>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

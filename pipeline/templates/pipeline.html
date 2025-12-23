@@ -1,0 +1,54 @@
+    <!-- Sales Pipeline Preview -->
+    <div class="bg-white rounded-2xl shadow-sm p-6 animate-fade-in">
+
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-800">
+                    Sales Pipeline
+                </h2>
+                <p class="text-sm text-slate-500">
+                    Overview of leads by stage
+                </p>
+            </div>
+
+            <a href="{% url 'lead_pipeline' %}"
+               class="text-sm font-medium text-teal-600 hover:text-teal-700">
+                View full pipeline →
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+            {% for stage, leads in pipeline.items %}
+            <div class="bg-slate-50 rounded-xl p-4">
+
+                <h3 class="text-sm font-semibold text-slate-700 mb-3 capitalize flex justify-between">
+                    <span>{{ stage }}</span>
+                    <span class="text-slate-400 text-xs">
+                        {{ leads.count }}
+                    </span>
+                </h3>
+
+                <div class="space-y-2">
+                    {% for lead in leads|slice:":3" %}
+                        <div class="bg-white rounded-lg p-3 shadow-sm">
+                            <p class="text-sm font-medium text-slate-800 truncate">
+                                {{ lead.name }}
+                            </p>
+                            <p class="text-xs text-slate-500 truncate">
+                                {{ lead.email }}
+                            </p>
+                        </div>
+                    {% empty %}
+                        <p class="text-xs text-slate-400">
+                            No leads
+                        </p>
+                    {% endfor %}
+                </div>
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+    </div>

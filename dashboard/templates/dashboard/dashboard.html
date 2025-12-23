@@ -3,10 +3,119 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-    
-    <h1 class="text-lg py-4">
-        Dashboard    
-    </h1>
+<div class="max-w-7xl mx-auto px-6 py-8">
 
-    
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
+
+        <div>
+            <h1 class="text-3xl font-semibold text-slate-800">
+                Welcome back, {{ request.user.username }}
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">
+                Here’s an overview of your CRM activity
+            </p>
+        </div>
+
+        <!-- <div class="relative">
+            <input
+                type="text"
+                placeholder="Search leads, clients..."
+                class="w-full md:w-72 pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white
+                       shadow-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
+            >
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                🔍
+            </span>
+        </div> -->
+
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+
+        <!-- Clients -->
+        <div
+            class="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg
+                   transition-all duration-300 hover:-translate-y-1"
+        >
+            <div class="flex items-center gap-4">
+                <div
+                    class="w-12 h-12 flex items-center justify-center rounded-xl
+                           bg-emerald-100 text-emerald-600 text-xl"
+                >
+                    👤
+                </div>
+                <div>
+                    <p class="text-slate-500 text-sm">Total Clients</p>
+                    <p class="text-2xl font-semibold text-slate-800">
+                        {{ total_clients }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leads -->
+        <div
+            class="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg
+                   transition-all duration-300 hover:-translate-y-1"
+        >
+            <div class="flex items-center gap-4">
+                <div
+                    class="w-12 h-12 flex items-center justify-center rounded-xl
+                           bg-sky-100 text-sky-600 text-xl"
+                >
+                    📈
+                </div>
+                <div>
+                    <p class="text-slate-500 text-sm">Total Leads</p>
+                    <p class="text-2xl font-semibold text-slate-800">
+                        {{ total_leads }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active -->
+        <div
+            class="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg
+                   transition-all duration-300 hover:-translate-y-1"
+        >
+            <div class="flex items-center gap-4">
+                <div
+                    class="w-12 h-12 flex items-center justify-center rounded-xl
+                           bg-violet-100 text-violet-600 text-xl"
+                >
+                    ⚡
+                </div>
+                <div>
+                    <p class="text-slate-500 text-sm">Active Leads</p>
+                    <p class="text-2xl font-semibold text-slate-800">
+                        {{ active_leads }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+<!-- Simple fade-in animation -->
+<style>
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-fade-in {
+    animation: fade-in 0.4s ease-out;
+}
+</style>
 {% endblock %}

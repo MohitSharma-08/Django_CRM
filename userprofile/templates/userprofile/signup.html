@@ -1,19 +1,89 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Sign up{% endblock %}
+{% block title %}Create an Account{% endblock %}
 
 {% block content %}
-    
-    <h1 class="text-lg py-4">
-        Sign up    
-    </h1>
+<div class="flex items-center justify-center min-h-[85vh] px-4 py-12">
 
-    <form method="post" action="." class="">
-        {% csrf_token %}
+    <div class="w-full max-w-md bg-white border border-zinc-200 rounded-xl shadow-sm p-8 sm:p-10">
 
-        {{ form.as_p }}
+        <div class="flex flex-col space-y-2 text-center mb-10">
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-950">
+                Create an Account
+            </h1>
+            <p class="text-sm text-zinc-500">
+                Start managing your leads with Teal CRM
+            </p>
+        </div>
 
-        <button class="py-4 px-8 bg-teal-500 text-white rounded-xl">Submit</button>
-    </form>
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
 
+            <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-zinc-800 ml-0.5">
+                    Username
+                </label>
+                {{ form.username }}
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-zinc-800 ml-0.5">
+                    Email address
+                </label>
+                <input
+                    type="email"
+                    name="email"
+                    required
+                    placeholder="name@example.com"
+                    class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 transition-all outline-none"
+                >
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-zinc-800 ml-0.5">
+                    Password
+                </label>
+                {{ form.password1 }}
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-zinc-800 ml-0.5">
+                    Confirm Password
+                </label>
+                {{ form.password2 }}
+            </div>
+
+            {% if form.errors %}
+                <div class="p-4 rounded-lg bg-zinc-50 border border-zinc-200">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <div class="flex items-start gap-2 text-[13px] text-red-600 font-medium">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                <span>{{ error }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="pt-2">
+                <button
+                    type="submit"
+                    class="inline-flex items-center justify-center w-full h-11 px-8 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-md transition-all shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 cursor-pointer active:scale-[0.98]">
+                    Create Account
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-8 text-center pt-6 border-t border-zinc-100">
+            <p class="text-sm text-zinc-500">
+                Already have an account? 
+                <a href="{% url 'login' %}" class="font-semibold text-zinc-950 hover:underline underline-offset-4 decoration-zinc-300">
+                    Log in
+                </a>
+            </p>
+        </div>
+
+    </div>
+</div>
 {% endblock %}

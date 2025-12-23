@@ -1,0 +1,71 @@
+{% extends "core/base.html" %}
+{% block title %}Verify OTP{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[85vh] px-4 py-12">
+    <div class="w-full max-w-md bg-white border border-zinc-200 rounded-lg shadow-sm p-8 sm:p-10">
+
+        <div class="flex flex-col space-y-2 text-center mb-8">
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-950">
+                Verify OTP
+            </h1>
+            <p class="text-sm text-zinc-500">
+                Enter the 6-digit code sent to your email
+            </p>
+        </div>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-zinc-800">
+                    One-Time Password
+                </label>
+                <input type="text" name="otp" maxlength="6" pattern="\d{6}" inputmode="numeric" required
+                    placeholder="000000"
+                    class="flex h-12 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-center text-lg font-bold tracking-[1em] ring-offset-white placeholder:text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 transition-all outline-none">
+            </div>
+
+            <button type="submit"
+                class="inline-flex items-center justify-center w-full h-10 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-md transition-all shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 cursor-pointer active:scale-[0.98]">
+                Verify & Login
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-zinc-100 flex flex-col items-center space-y-4" x-data="{ 
+        timer: 30, 
+        canResend: false, 
+        isSending: false,
+        resend() {
+            this.isSending = true;
+            fetch('{% url 'resend_otp' %}')
+                .then(response => {
+                    if (response.ok) {
+                        this.timer = 30;
+                        this.canResend = false;
+                        this.startTimer();
+                    }
+                })
+                .finally(() => { this.isSending = false; });
+        },
+        startTimer() {
+            let interval = setInterval(() => {
+                if(this.timer > 0) { this.timer-- } 
+                else { this.canResend = true; clearInterval(interval) }
+            }, 1000);
+        }
+     }" x-init="startTimer()">
+
+            <p class="text-xs text-zinc-500 font-medium uppercase tracking-wider" x-show="!canResend">
+                Resend available in <span class="text-zinc-950" x-text="timer">30</span>s
+            </p>
+
+            <button type="button" @click="resend()" :disabled="!canResend || isSending" class="w-full h-9 px-4 text-xs font-semibold rounded-md border border-zinc-200 transition-all
+               enabled:bg-white enabled:text-zinc-950 enabled:hover:bg-zinc-50 enabled:cursor-pointer enabled:shadow-sm
+               disabled:bg-zinc-50 disabled:text-zinc-400 disabled:cursor-not-allowed">
+                <span x-text="isSending ? 'Sending...' : (canResend ? 'Resend OTP Code' : 'Resend Code Locked')"></span>
+            </button>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

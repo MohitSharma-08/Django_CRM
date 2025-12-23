@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -13,9 +14,13 @@ def clients_list(request):
         deleted_at__isnull = True,
 
         )
+    
+    paginator = Paginator(clients, 10)
+    page_number = request.GET.get('page')
+    clients_page = paginator.get_page(page_number)
 
     return render(request, 'client/clients_list.html' ,{
-        'clients': clients
+        'clients': clients_page
     }) 
 
 @login_required
@@ -83,6 +88,12 @@ def clients_add(request):
 
 
             return redirect('clients_list')
+        
+        else:
+            for error in form.errors.values():
+                messages.error(request, error.as_text().replace('* ', ''))
+
+
     else:
         form = AddClientForm()
 
