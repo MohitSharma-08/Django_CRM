@@ -1,6 +1,5 @@
-import pandas as pd
-
 import json
+import pandas as pd
 
 from django.http import HttpResponse
 from django.core.paginator import Paginator
@@ -9,136 +8,287 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import Lead
-from .forms import AddLeadForm, LeadUploadForm
-
 from client.models import Client
+
+from .models import Lead
+from .forms import AddLeadForm
+from .forms import LeadUploadForm
+from .forms import (
+    LeadStep1Form, LeadStep2Form, LeadStep3Form,
+    LeadStep4Form, LeadStep5Form
+)
+
+STEPS = {
+    1: LeadStep1Form,
+    2: LeadStep2Form,
+    3: LeadStep3Form,
+    4: LeadStep4Form,
+    5: LeadStep5Form,
+}
+
+STEPPER_LABELS = [
+    "Create",
+    "Contact",
+    "Organization",
+    "Address",
+    "Qualify",
+]
+
+
+@login_required
+def lead_wizard(request, step=1, pk=None):
+    step = int(step)
+
+    STEPS = {
+        1: LeadStep1Form,
+        2: LeadStep2Form,
+        3: LeadStep3Form,
+        4: LeadStep4Form,
+        5: LeadStep5Form,
+    }
+
+    STEP_TITLES = {
+        1: "Lead Details",
+        2: "Contact Information",
+        3: "Organization",
+        4: "Address",
+        5: "Qualification",
+    }
+
+    session_key = f"lead_wizard_{pk or 'new'}"
+    instance = None
+
+    # -----------------------------
+    # EDIT MODE → preload ONCE
+    # -----------------------------
+    if pk:
+        instance = get_object_or_404(
+            Lead,
+            pk=pk,
+            lead_owner=request.user,
+            deleted_at__isnull=True
+        )
+
+        if session_key not in request.session:
+            request.session[session_key] = {}
+
+            for field in Lead._meta.fields:
+                if field.name in ['id', 'created_at', 'modified_at']:
+                    continue
+
+                value = getattr(instance, field.name)
+
+                # ForeignKey → store ID, not object
+                if field.is_relation:
+                    value = value.id if value else None
+
+                request.session[session_key][field.name] = value
+
+
+    session_data = request.session.get(session_key, {})
+    form_class = STEPS[step]
+
+    # -----------------------------
+    # POST
+    # -----------------------------
+    if request.method == 'POST':
+        form = form_class(request.POST)
+        if form.is_valid():
+            session_data.update(form.cleaned_data)
+            request.session[session_key] = session_data
+
+            if step < len(STEPS):
+                return redirect(
+                    'edit_lead_step' if pk else 'add_lead_step',
+                    pk=pk,
+                    step=step + 1
+                )
+
+            # FINAL SAVE
+            if instance:
+                    for key, value in session_data.items():
+                        field = Lead._meta.get_field(key)
+
+                        # ForeignKey → assign to <field>_id
+                        if field.is_relation:
+                            setattr(instance, f"{key}_id", value)
+                        else:
+                            setattr(instance, key, value)
+
+                    instance.save()
+
+            else:
+                Lead.objects.create(
+                    **session_data,
+                    lead_owner=request.user
+                )
+
+            request.session.pop(session_key, None)
+            messages.success(request, "Lead saved successfully")
+            return redirect('leads_list')
+
+    # -----------------------------
+    # GET
+    # -----------------------------
+    else:
+        form = form_class(initial=session_data)
+
+    return render(request, 'lead/add_lead.html', {
+        'form': form,
+        'step': step,
+        'total_steps': len(STEPS),
+        'step_title': STEP_TITLES[step],
+        'is_edit': bool(pk),
+    })
+
+
 
 @login_required
 def leads_list(request):
     leads = Lead.objects.filter(
-        created_by = request.user,
-        deleted_at__isnull = True,
-        converted_to_client = False                    
-        )  
-    
+        lead_owner=request.user,
+        deleted_at__isnull=True,
+        converted_to_client=False
+    )
+
     paginator = Paginator(leads, 10)
-
     page_number = request.GET.get('page')
-
     leads_page = paginator.get_page(page_number)
-
-    # leads = Lead.objects.all()
-    # make all leads visible
 
     return render(request, 'lead/leads_list.html', {
         'leads': leads_page
     })
 
-# lead details
+
 @login_required
 def leads_detail(request, pk):
     lead = get_object_or_404(
-        Lead, pk=pk, created_by = request.user, deleted_at__isnull = True
+        Lead,
+        pk=pk,
+        lead_owner=request.user,
+        deleted_at__isnull=True
     )
 
     return render(request, 'lead/leads_details.html', {
         'lead': lead
     })
 
-# delete leads
+
 @login_required
 def leads_delete(request, pk):
-    lead = get_object_or_404(Lead, pk=pk, created_by = request.user)
-    
-    # lead.delete()
+    lead = get_object_or_404(
+        Lead,
+        pk=pk,
+        lead_owner=request.user
+    )
 
     if request.method == 'POST':
         lead.deleted_at = timezone.now()
         lead.deleted_by = request.user
         lead.save()
-
-    messages.success(request, 'Lead deleted successfully')
+        messages.success(request, 'Lead deleted successfully')
 
     return redirect('leads_list')
 
-# edit leads
+
 @login_required
 def leads_edit(request, pk):
-    lead = get_object_or_404(Lead, created_by = request.user, pk=pk)
+    lead = get_object_or_404(
+        Lead,
+        pk=pk,
+        lead_owner=request.user
+    )
 
     if request.method == 'POST':
         form = AddLeadForm(request.POST, instance=lead)
-
         if form.is_valid():
             form.save()
-
             messages.success(request, "Changes applied.")
-
             return redirect('leads_list')
-
     else:
         form = AddLeadForm(instance=lead)
 
     return render(request, 'lead/leads_edit.html', {
         'form': form
     })
-    
 
-# add leads
+
 @login_required
-def add_lead(request):
+def add_lead(request, step=1):
+    step = int(step)
+    form_class = STEPS[step]
+
+    STEP_TITLES = {
+        1: "Basic Lead Information",
+        2: "Contact Information",
+        3: "Organization Details",
+        4: "Address",
+        5: "Qualification & Preferences",
+    }
+
+    session_data = request.session.get('lead_form', {})
 
     if request.method == 'POST':
-        form = AddLeadForm(request.POST)
-
+        form = form_class(request.POST)
         if form.is_valid():
-            lead = form.save(commit=False)
-            lead.created_by = request.user
-            lead.save()
+            session_data.update(form.cleaned_data)
+            request.session['lead_form'] = session_data
 
-            messages.success(request, 'The lead was Created.')
+            if step < len(STEPS):
+                return redirect('add_lead_step', step=step + 1)
+
+            # FINAL SAVE
+            lead = Lead.objects.create(
+            **session_data,
+            lead_owner=request.user
+            )
 
 
+            request.session.pop('lead_form')
+            messages.success(request, 'Lead created successfully.')
             return redirect('leads_list')
     else:
-        form = AddLeadForm()
+        form = form_class(initial=session_data)
 
-    return render(request, 'lead/add_lead.html',{
-    'form': form
+    return render(request, 'lead/add_lead.html', {
+        'form': form,
+        'step': step,
+        'total_steps': len(STEPS),
+        'step_title': STEP_TITLES.get(step, ''),
+        'stepper_labels': STEPPER_LABELS,
     })
+
 
 
 @login_required
 def convert_to_client(request, pk):
-    lead = get_object_or_404(Lead, created_by = request.user, pk=pk)
+    lead = get_object_or_404(
+        Lead,
+        pk=pk,
+        lead_owner=request.user
+    )
 
-    client = Client.objects.create(
-        name = lead.name,
-        email = lead.email,
-        description = lead.description,
-        created_by = request.user,
+    Client.objects.create(
+        name=lead.first_name,
+        email=lead.email,
+        created_by=request.user
     )
 
     lead.converted_to_client = True
     lead.save()
 
     messages.success(request, 'The lead was successfully converted to a client.')
-
     return redirect('leads_list')
 
 
-# uploading leads through files
 @login_required
 def upload_leads(request):
     if request.method == 'POST':
         form = LeadUploadForm(request.POST, request.FILES)
-
         if form.is_valid():
             file = request.FILES['file']
 
             try:
-                # Read file
                 if file.name.endswith('.csv'):
                     df = pd.read_csv(file)
                 elif file.name.endswith('.xlsx'):
@@ -147,25 +297,23 @@ def upload_leads(request):
                     messages.error(request, 'Unsupported file format.')
                     return redirect('leads_list')
 
-                required_columns = {'name', 'email', 'description', 'priority', 'status'}
+                df.columns = df.columns.str.lower()
 
-                if not required_columns.issubset(df.columns.str.lower()):
-                    messages.error(request, 'Excel file has missing columns.')
+                required_columns = {'name', 'email'}
+                if not required_columns.issubset(df.columns):
+                    messages.error(request, 'File has missing required columns.')
                     return redirect('leads_list')
 
                 created = 0
-
                 for _, row in df.iterrows():
-                    if pd.isna(row['email']):
-                        continue  # skip bad rows
+                    if pd.isna(row.get('email')):
+                        continue
 
                     Lead.objects.create(
-                        name=row['name'],
-                        email=row['email'],
-                        description=row.get('description', ''),
-                        priority=row.get('priority', 'medium'),
-                        status=row.get('status', 'new'),
-                        created_by=request.user
+                        first_name=row.get('name', 'Unknown'),
+                        email=row.get('email'),
+                        organization_name='Imported',
+                        lead_owner=request.user
                     )
                     created += 1
 
@@ -175,48 +323,48 @@ def upload_leads(request):
                 messages.error(request, f'Upload failed: {str(e)}')
 
             return redirect('leads_list')
-
     else:
         form = LeadUploadForm()
 
-    return render(request, 'lead/upload_leads.html', {'form': form})
+    return render(request, 'lead/upload_leads.html', {
+        'form': form
+    })
 
 
-# pipeline functionality
 @login_required
 def pipeline(request):
-    lead = Lead.objects.filter(
-        created_by = request.user,
-        deleted_at__isnull = True
+    leads = Lead.objects.filter(
+        lead_owner=request.user,
+        deleted_at__isnull=True
     )
 
     pipeline = {
-        'new': lead.filter(status='new'),
-        'contacted': lead.filter(status='contacted'),
-        'qualified': lead.filter(status='qualified'),
-        'won': lead.filter(status='won'),
-        'lost': lead.filter(status='lost'),
+        'new': leads.filter(status='new'),
+        'contacted': leads.filter(status='contacted'),
+        'qualified': leads.filter(status='qualified'),
+        'won': leads.filter(status='won'),
+        'lost': leads.filter(status='lost'),
     }
 
     return render(request, 'lead/leads_pipeline.html', {
         'pipeline': pipeline
     })
 
-# status change of leads
+
 @login_required
 def update_lead_status(request, pk):
     lead = get_object_or_404(
         Lead,
-        pk = pk,
-        created_by = request.user
-    ) 
+        pk=pk,
+        lead_owner=request.user
+    )
 
     if request.method == 'POST':
         data = json.loads(request.body)
         status = data.get('status')
-        
-        if status in dict(Lead.CHOICES_STATUS):
+
+        if status in dict(Lead.STATUS_CHOICES):
             lead.status = status
             lead.save()
 
-    return HttpResponse(status = 204)
+    return HttpResponse(status=204)

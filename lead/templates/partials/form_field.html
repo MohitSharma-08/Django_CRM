@@ -1,0 +1,9 @@
+<div class="space-y-1.5">
+    <label class="block text-xs font-medium text-zinc-500 uppercase tracking-wide">
+        {{ field.label }}{% if field.field.required %}<span class="text-red-500 ml-1">*</span>{% endif %}
+    </label>
+    {{ field }}
+    {% if field.errors %}
+        <p class="text-xs text-red-500 mt-1">{{ field.errors.0 }}</p>
+    {% endif %}
+</div>
