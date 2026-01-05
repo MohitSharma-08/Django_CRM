@@ -16,13 +16,14 @@ urlpatterns = [
     path('userprofile/', include('userprofile.urls')),
     path('useraccount/', include('useraccount.urls')),
     path('settings/', include('settings.urls')),
+    path('dashboard/roles/', include('roles.urls')),
     path('about/', about, name='about'),
     path('admin/', admin.site.urls),
 
     path('sign-up/', signup, name='signup'),
     path('log-in/', CustomLoginView.as_view() ,name='login'),
     path('log-out/', views.LogoutView.as_view(), name='logout'),
-
+    path("roles/", include("roles.urls")),
 ]
 
 # Only serve media files through Django during development

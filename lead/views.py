@@ -10,6 +10,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from client.models import Client
 
+from roles.decorators import has_permission
+from roles.utils import has_permission
+
 from .models import Lead
 from .forms import AddLeadForm
 from .forms import LeadUploadForm
@@ -34,7 +37,6 @@ STEPPER_LABELS = [
     "Qualify",
 ]
 
-
 @login_required
 def lead_wizard(request, step=1, pk=None):
     step = int(step)
@@ -49,18 +51,17 @@ def lead_wizard(request, step=1, pk=None):
 
     STEP_TITLES = {
         1: "Lead Details",
-        2: "Contact Information",
-        3: "Organization",
-        4: "Address",
-        5: "Qualification",
+        2: "Contact Person",
+        3: "Contact Information",
+        4: "Organization & Address",
+        5: "Qualification & Assignment",
     }
 
+    total_steps = len(STEPS)
     session_key = f"lead_wizard_{pk or 'new'}"
     instance = None
 
-    # -----------------------------
-    # EDIT MODE → preload ONCE
-    # -----------------------------
+    # ---------- EDIT MODE ----------
     if pk:
         instance = get_object_or_404(
             Lead,
@@ -71,52 +72,39 @@ def lead_wizard(request, step=1, pk=None):
 
         if session_key not in request.session:
             request.session[session_key] = {}
-
             for field in Lead._meta.fields:
                 if field.name in ['id', 'created_at', 'modified_at']:
                     continue
-
                 value = getattr(instance, field.name)
-
-                # ForeignKey → store ID, not object
                 if field.is_relation:
                     value = value.id if value else None
-
                 request.session[session_key][field.name] = value
-
 
     session_data = request.session.get(session_key, {})
     form_class = STEPS[step]
 
-    # -----------------------------
-    # POST
-    # -----------------------------
+    # ---------- POST ----------
     if request.method == 'POST':
         form = form_class(request.POST)
         if form.is_valid():
             session_data.update(form.cleaned_data)
             request.session[session_key] = session_data
 
-            if step < len(STEPS):
-                return redirect(
-                    'edit_lead_step' if pk else 'add_lead_step',
-                    pk=pk,
-                    step=step + 1
-                )
+            if step < total_steps:
+                if pk:
+                    return redirect('edit_lead_step', pk=pk, step=step + 1)
+                else:
+                    return redirect('add_lead_step', step=step + 1)
 
             # FINAL SAVE
             if instance:
-                    for key, value in session_data.items():
-                        field = Lead._meta.get_field(key)
-
-                        # ForeignKey → assign to <field>_id
-                        if field.is_relation:
-                            setattr(instance, f"{key}_id", value)
-                        else:
-                            setattr(instance, key, value)
-
-                    instance.save()
-
+                for key, value in session_data.items():
+                    field = Lead._meta.get_field(key)
+                    if field.is_relation:
+                        setattr(instance, f"{key}_id", value)
+                    else:
+                        setattr(instance, key, value)
+                instance.save()
             else:
                 Lead.objects.create(
                     **session_data,
@@ -127,17 +115,19 @@ def lead_wizard(request, step=1, pk=None):
             messages.success(request, "Lead saved successfully")
             return redirect('leads_list')
 
-    # -----------------------------
-    # GET
-    # -----------------------------
+    # ---------- GET ----------
     else:
         form = form_class(initial=session_data)
+
+    progress_percent = int((step - 1) / (total_steps - 1) * 100)
 
     return render(request, 'lead/add_lead.html', {
         'form': form,
         'step': step,
-        'total_steps': len(STEPS),
+        'total_steps': total_steps,
         'step_title': STEP_TITLES[step],
+        'stepper_labels': STEPPER_LABELS,
+        'progress_percent': progress_percent,
         'is_edit': bool(pk),
     })
 
@@ -219,13 +209,14 @@ def add_lead(request, step=1):
     form_class = STEPS[step]
 
     STEP_TITLES = {
-        1: "Basic Lead Information",
-        2: "Contact Information",
-        3: "Organization Details",
-        4: "Address",
-        5: "Qualification & Preferences",
+        1: "Lead Details",
+        2: "Contact Person",
+        3: "Contact Information",
+        4: "Organization & Address",
+        5: "Qualification & Assignment",
     }
 
+    total_steps = len(STEPS)
     session_data = request.session.get('lead_form', {})
 
     if request.method == 'POST':
@@ -234,15 +225,13 @@ def add_lead(request, step=1):
             session_data.update(form.cleaned_data)
             request.session['lead_form'] = session_data
 
-            if step < len(STEPS):
+            if step < total_steps:
                 return redirect('add_lead_step', step=step + 1)
 
-            # FINAL SAVE
-            lead = Lead.objects.create(
-            **session_data,
-            lead_owner=request.user
+            Lead.objects.create(
+                **session_data,
+                lead_owner=request.user
             )
-
 
             request.session.pop('lead_form')
             messages.success(request, 'Lead created successfully.')
@@ -250,12 +239,15 @@ def add_lead(request, step=1):
     else:
         form = form_class(initial=session_data)
 
+    progress_percent = int((step - 1) / (total_steps - 1) * 100)
+
     return render(request, 'lead/add_lead.html', {
         'form': form,
         'step': step,
-        'total_steps': len(STEPS),
-        'step_title': STEP_TITLES.get(step, ''),
+        'total_steps': total_steps,
+        'step_title': STEP_TITLES[step],
         'stepper_labels': STEPPER_LABELS,
+        'progress_percent': progress_percent,
     })
 
 

@@ -1,0 +1,160 @@
+{% extends "core/base.html" %}
+
+{% block title %}Role Management{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto p-6">
+
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-zinc-900">Role Management</h1>
+            <p class="text-sm text-zinc-500">
+                Manage access roles and system permissions for all users
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <a href="{% url 'roles:permissions' %}" 
+                class="px-4 py-2 bg-white border border-zinc-200 text-zinc-700 text-sm font-semibold rounded-md hover:bg-zinc-50 transition shadow-sm flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Permissions
+            </a>
+            
+            <a href="{% url 'roles:user_upload' %}"
+                class="px-4 py-2 bg-zinc-900 border border-zinc-900 text-white text-sm font-semibold rounded-md hover:bg-zinc-800 transition shadow-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                Upload Users
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-zinc-50 border-b border-zinc-200">
+                <tr class="text-left text-sm text-zinc-600">
+                    <th class="p-4">User</th>
+                    <th class="p-4">Email</th>
+                    <th class="p-4">Current Role</th>
+                    <th class="p-4 text-right">Action</th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-zinc-100 text-sm">
+                {% for user in users %}
+                <tr class="hover:bg-zinc-50 transition-colors">
+                    <td class="p-4 font-medium text-zinc-900">
+                        <div class="flex flex-col">
+                            <a href="{% url 'roles:user_detail' user.id %}"
+                                class="hover:underline text-zinc-900 font-semibold">
+                                {{ user.username }}
+                            </a>
+                            {% if user == request.user %}
+                            <span class="text-[10px] text-blue-600 font-bold uppercase tracking-tight">Your Account</span>
+                            {% endif %}
+                        </div>
+                    </td>
+
+                    <td class="p-4 text-zinc-600">
+                        {{ user.email|default:"—" }}
+                    </td>
+
+                    <td class="p-4">
+                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold
+                                {% if user.role.role == 'superadmin' %} bg-purple-50 text-purple-700 border border-purple-100
+                                {% elif user.role.role == 'admin' %} bg-blue-50 text-blue-700 border border-blue-100
+                                {% elif user.role.role == 'employee' %} bg-amber-50 text-amber-700 border border-amber-100
+                                {% else %} bg-zinc-50 text-zinc-700 border border-zinc-100 {% endif %}
+                            ">
+                            {{ user.role.get_role_display }}
+                        </span>
+                    </td>
+
+                    <td class="p-4 text-right">
+                        {% if user != request.user %}
+                        <form method="post" class="flex items-center justify-end gap-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+
+                            <select class="border border-zinc-300 rounded-md px-2 py-1 text-xs bg-white focus:ring-2 focus:ring-zinc-200 outline-none" 
+                                    onchange="updateRole(this)"
+                                    data-user-id="{{ user.id }}">
+                                {% for value, label in role_choices %}
+                                <option value="{{ value }}" {% if user.role.role == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <button type="submit"
+                                class="px-3 py-1.5 text-xs font-semibold text-white bg-zinc-900 rounded-md hover:bg-zinc-800 transition-all active:scale-95">
+                                Save
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-xs text-zinc-400 italic">No actions available</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="p-12 text-center text-zinc-500 italic">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if users.has_other_pages %}
+        <div class="px-4 py-4 bg-white border-t border-zinc-200 flex items-center justify-between">
+            <div class="text-sm text-zinc-500">
+                Showing <span class="font-medium">{{ users.start_index }}</span> to <span class="font-medium">{{ users.end_index }}</span> of <span class="font-medium">{{ users.paginator.count }}</span> users
+            </div>
+            <div class="flex items-center gap-2">
+                {% if users.has_previous %}
+                    <a href="?page={{ users.previous_page_number }}" class="px-3 py-1 text-sm border border-zinc-300 rounded hover:bg-zinc-50 text-zinc-600 transition">Previous</a>
+                {% else %}
+                    <span class="px-3 py-1 text-sm border border-zinc-100 rounded text-zinc-300 cursor-not-allowed">Previous</span>
+                {% endif %}
+
+                <div class="flex items-center gap-1">
+                    {% for i in users.paginator.page_range %}
+                        {% if users.number == i %}
+                            <span class="px-3 py-1 text-sm bg-zinc-900 text-white rounded font-medium">{{ i }}</span>
+                        {% else %}
+                            <a href="?page={{ i }}" class="px-3 py-1 text-sm border border-zinc-300 rounded hover:bg-zinc-50 text-zinc-600 transition">{{ i }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                {% if users.has_next %}
+                    <a href="?page={{ users.next_page_number }}" class="px-3 py-1 text-sm border border-zinc-300 rounded hover:bg-zinc-50 text-zinc-600 transition">Next</a>
+                {% else %}
+                    <span class="px-3 py-1 text-sm border border-zinc-100 rounded text-zinc-300 cursor-not-allowed">Next</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function updateRole(select) {
+        const userId = select.dataset.userId;
+        const role = select.value;
+
+        fetch("{% url 'roles:update_user_role' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: `user_id=${userId}&role=${role}`
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert("Failed to update role");
+                }
+            });
+    }
+</script>
+{% endblock %}

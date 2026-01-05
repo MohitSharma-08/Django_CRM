@@ -1,121 +1,93 @@
 {% extends 'core/base.html' %}
-{% block title %}
-{% if is_edit %}Edit Lead{% else %}Create Lead{% endif %}
-{% endblock %}
+{% load role_permissions %}
 
 {% block content %}
-<div class="max-w-[1400px] mx-auto p-6">
+<div class="max-w-6xl mx-auto p-6">
 
-    <div class="text-sm text-zinc-500 mb-4">
-        <span class="text-blue-600 font-medium">Home / Lead /
-            {% if is_edit %}
-            Edit Lead
-            {% else %}
-            Create Lead
-            {% endif %}
-        </span>
-    </div>
+    {% has_perm "leads.create" as can_create_lead %}
 
-    <div class="flex items-center gap-2 mb-8">
-        <h1 class="text-2xl font-semibold text-zinc-900">
-            {% if is_edit %}
-            Edit Lead
-            {% else %}
-            Create Lead
-            {% endif %}
-        </h1>
+    <h1 class="text-2xl font-semibold mb-8">
+        {% if can_create_lead %}
+        Create Lead
+        {% else %}
+        <span class="text-red-600">Access denied</span>
+        {% endif %}
+    </h1>
 
-        <!-- trying -->
-        {% if is_edit %}
-        <p class="text-sm text-zinc-500 mt-1">
-            Editing existing lead
-        </p>
+    {% if can_create_lead %}
+
+    <!-- ================= STEPPER ================= -->
+    <div class="flex items-center w-full max-w-4xl mx-auto mb-16">
+        {% for label in stepper_labels %}
+        {% with idx=forloop.counter %}
+
+        <div class="relative flex flex-col items-center group">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 z-10
+                    {% if step >= idx %}
+                        bg-blue-600 border-blue-600 shadow-md shadow-blue-200
+                    {% else %}
+                        bg-white border-zinc-300
+                    {% endif %}">
+
+                {% if step > idx %}
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+                {% else %}
+                <span class="{% if step == idx %}text-white{% else %}text-zinc-400{% endif %} text-sm font-bold">
+                    {{ idx }}
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="absolute -bottom-10 w-32 text-center">
+                <span class="text-[11px] font-bold uppercase tracking-widest transition-colors duration-300
+                        {% if step == idx %} text-blue-600 {% else %} text-zinc-400 {% endif %}">
+                    {{ label }}
+                </span>
+            </div>
+        </div>
+
+        {% if not forloop.last %}
+        <div class="flex-1 h-[2px] mx-0 transition-colors duration-700
+                {% if step > idx %}
+                    bg-blue-600
+                {% else %}
+                    bg-zinc-200
+                {% endif %}">
+        </div>
         {% endif %}
 
+        {% endwith %}
+        {% endfor %}
     </div>
 
-    <div class="flex justify-center mb-12">
-        <div class="w-full max-w-4xl px-3">
+    <!-- ================= END STEPPER ================= -->
 
-            <div class="flex items-start w-full">
+    <h2 class="text-lg font-semibold mb-1">{{ step_title }}</h2>
+    <p class="text-sm text-zinc-500 mb-6">
+        Step {{ step }} of {{ total_steps }}
+    </p>
 
-                {% for label in stepper_labels %}
-                {% with idx=forloop.counter %}
-
-                <div class="relative flex flex-col items-center z-10">
-
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300
-                        {% if step >= idx %}
-                            bg-blue-600 border-blue-600
-                        {% else %}
-                            bg-white border-zinc-300
-                        {% endif %}">
-
-                        {% if step > idx %}
-                        <span class="text-white text-xs font-bold">✓</span>
-                        {% elif step == idx %}
-                        <span class="text-white text-xs font-bold">{{ idx }}</span>
-                        {% else %}
-                        <span class="text-zinc-400 text-xs font-bold">{{ idx }}</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="absolute top-10 w-32 text-center text-[10px] font-medium uppercase tracking-wider
-                        {% if step == idx %} text-blue-600 {% else %} text-zinc-400 {% endif %}">
-                        {{ label }}
-                    </div>
-                </div>
-
-                {% if not forloop.last %}
-                <div class="flex-1 h-0.5 mt-4 mx-2 transition-colors duration-300
-                        {% if step > idx %}
-                            bg-blue-600
-                        {% else %}
-                            bg-zinc-200
-                        {% endif %}">
-                </div>
-                {% endif %}
-
-                {% endwith %}
-                {% endfor %}
-            </div>
-
-        </div>
-    </div>
-    <div class="mb-6">
-        <h2 class="text-lg font-semibold text-zinc-900">
-            {{ step_title }}
-        </h2>
-        <p class="text-sm text-zinc-500">
-            Step {{ step }} of {{ total_steps }}
-        </p>
-    </div>
-
-    <form method="post" id="lead-form" novalidate>
+    <form method="post" novalidate>
         {% csrf_token %}
 
-        <div class="bg-white rounded-lg border border-zinc-200 p-6 shadow-sm">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                {% for field in form %}
-                {% include 'partials/form_field.html' with field=field %}
-                {% endfor %}
-            </div>
+        <div class="bg-white border rounded-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for field in form %}
+            {% include 'partials/form_field.html' with field=field %}
+            {% endfor %}
         </div>
 
-        <div class="flex justify-between items-center mt-8">
-
+        <div class="flex justify-between mt-8">
             {% if step > 1 %}
-            <a href="{% url 'add_lead_step' step=step|add:'-1' %}"
-                class="px-4 py-2 text-sm font-medium border rounded-md text-zinc-700 hover:bg-zinc-50 transition-colors">
+            <a href="{% url 'add_lead_step' step=step|add:'-1' %}" class="px-4 py-2 border rounded-md">
                 ← Back
             </a>
             {% else %}
             <div></div>
             {% endif %}
 
-            <button type="submit" id="next-btn" disabled class="px-6 py-2 text-sm font-medium rounded-md text-white transition-all shadow-sm
-                       bg-blue-600 hover:bg-blue-700 cursor-pointer
-                       disabled:bg-zinc-300 disabled:cursor-not-allowed disabled:shadow-none">
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md">
                 {% if step == total_steps %}
                 Save Lead
                 {% else %}
@@ -124,29 +96,12 @@
             </button>
         </div>
     </form>
+
+    {% else %}
+    <div class="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg">
+        You do not have permission to create leads.
+    </div>
+    {% endif %}
+
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('lead-form');
-        const nextBtn = document.getElementById('next-btn');
-        const inputs = form.querySelectorAll('input, select, textarea');
-
-        function checkValidation() {
-            if (form.checkValidity()) {
-                nextBtn.disabled = false;
-            } else {
-                nextBtn.disabled = true;
-            }
-        }
-
-        checkValidation();
-
-        inputs.forEach(input => {
-            input.addEventListener('input', checkValidation);
-            input.addEventListener('change', checkValidation);
-        });
-    });
-</script>
-
 {% endblock %}

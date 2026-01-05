@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'dashboard',
     'lead',
     'pipeline',
+    'roles',
     'settings',
     'useraccount',
     'userprofile',

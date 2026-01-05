@@ -1,18 +1,18 @@
-{% extends 'core/base.html' %}
-{% load static %}
-{% block title %}Upload Leads{% endblock %}
+{% extends "core/base.html" %}
+
+{% block title %}Bulk User Upload{% endblock %}
 
 {% block content %}
 <div class="max-w-[1400px] mx-auto p-6">
 
     <div class="text-sm text-zinc-500 mb-4">
-        Home / <a href="{% url 'leads_list' %}" class="hover:text-zinc-700 transition-colors">Leads</a> / <span class="text-blue-600 font-medium">Bulk Upload</span>
+        Home / <a href="{% url 'roles:user_list' %}" class="hover:text-zinc-700 transition-colors">User Management</a> / <span class="text-blue-600 font-medium">Bulk Upload</span>
     </div>
 
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-zinc-900">Import Leads</h1>
+        <h1 class="text-2xl font-bold text-zinc-900">Import Users</h1>
         <p class="text-sm text-zinc-500 mt-1">
-            Expand your pipeline by uploading leads in bulk. Ensure your file columns match the system requirements.
+            Populate your database by uploading a spreadsheet. Please ensure your file follows the required format.
         </p>
     </div>
 
@@ -25,7 +25,7 @@
                     <div class="bg-zinc-900 px-6 py-4">
                         <h3 class="text-white font-semibold flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                            Leads File Selection
+                            File Selection
                         </h3>
                     </div>
 
@@ -37,11 +37,11 @@
                                 <div class="flex flex-col items-center justify-center text-center px-4">
                                     <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 border border-zinc-200 group-hover:scale-110 transition-transform">
                                         <svg class="w-6 h-6 text-zinc-400 group-hover:text-zinc-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                         </svg>
                                     </div>
-                                    <p class="text-sm text-zinc-700 mb-1"><span class="font-bold">Click to upload leads</span> or drag and drop</p>
-                                    <p class="text-xs text-zinc-500">Supports .CSV and .XLSX (Max. 10MB)</p>
+                                    <p class="text-sm text-zinc-700 mb-1"><span class="font-bold">Click to upload</span> or drag and drop</p>
+                                    <p class="text-xs text-zinc-500">Excel or CSV files only (Max. 10MB)</p>
                                     
                                     <div id="file-name" class="mt-4 text-sm font-medium text-blue-600 hidden bg-blue-50 px-3 py-1 rounded-full border border-blue-100"></div>
                                 </div>
@@ -54,17 +54,17 @@
 
                         {% if form.file.errors %}
                             <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-md">
-                                <p class="text-xs text-red-600 font-medium">{{ form.file.errors.0|striptags }}</p>
+                                <p class="text-xs text-red-600 font-medium">{{ form.file.errors.0 }}</p>
                             </div>
                         {% endif %}
                     </div>
 
                     <div class="px-6 py-4 bg-zinc-50 border-t border-zinc-200 flex justify-between items-center">
-                        <a href="{% url 'leads_list' %}" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-1">
-                            &larr; Back to leads
+                        <a href="{% url 'roles:user_list' %}" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-1">
+                            &larr; Cancel
                         </a>
                         <button type="submit" class="px-6 py-2 bg-zinc-900 text-white text-sm font-bold rounded-md hover:bg-zinc-800 transition shadow active:scale-95">
-                            Upload Leads
+                            Upload & Process
                         </button>
                     </div>
                 </div>
@@ -73,39 +73,35 @@
 
         <div class="lg:col-span-1">
             <div class="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-                <h4 class="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4">Upload Instructions</h4>
+                <h4 class="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4">Requirements</h4>
                 <ul class="space-y-4">
                     <li class="flex gap-3">
                         <div class="w-5 h-5 rounded-full bg-zinc-100 flex items-center justify-center flex-shrink-0">
                             <span class="text-[10px] font-bold text-zinc-600">1</span>
                         </div>
-                        <p class="text-xs text-zinc-600 leading-relaxed">Ensure your file contains required headers: <code class="bg-zinc-100 px-1 rounded text-zinc-900 font-medium">first_name</code>, <code class="bg-zinc-100 px-1 rounded text-zinc-900 font-medium">last_name</code>, and <code class="bg-zinc-100 px-1 rounded text-zinc-900 font-medium">email</code>.</p>
+                        <p class="text-xs text-zinc-600 leading-relaxed">Headers must exactly match: <code class="bg-zinc-100 px-1 rounded text-zinc-900 font-medium">username</code>, <code class="bg-zinc-100 px-1 rounded text-zinc-900 font-medium">email</code>, <code class="bg-zinc-100 px-1 rounded text-zinc-900 font-medium">password</code>.</p>
                     </li>
                     <li class="flex gap-3">
                         <div class="w-5 h-5 rounded-full bg-zinc-100 flex items-center justify-center flex-shrink-0">
                             <span class="text-[10px] font-bold text-zinc-600">2</span>
                         </div>
-                        <p class="text-xs text-zinc-600 leading-relaxed">Duplicate leads based on email address will be skipped during the import process.</p>
+                        <p class="text-xs text-zinc-600 leading-relaxed">Passwords will be generated and emailed to users automatically.</p>
                     </li>
                 </ul>
 
                 <hr class="my-6 border-zinc-100">
 
-                <div class="space-y-3">
-                    <p class="text-xs font-medium text-zinc-900">Need a starting point?</p>
-                    <a href="{% static '/sample_leads_upload.xlsx' %}" download
-                       class="w-full flex items-center justify-center gap-2 px-4 py-2 border border-zinc-300 rounded-md text-zinc-700 text-xs font-bold hover:bg-zinc-50 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                        Download Sample Template
-                    </a>
-                </div>
+                <a href="{% url 'roles:download_user_template' %}" class="w-full flex items-center justify-center gap-2 px-4 py-2 border border-zinc-300 rounded-md text-zinc-700 text-xs font-bold hover:bg-zinc-50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    Download Template
+                </a>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Filename display logic for Leads Upload
+    // Filename display logic
     const fileInput = document.querySelector('input[type="file"]');
     const fileNameDisplay = document.getElementById('file-name');
 

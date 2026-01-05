@@ -14,12 +14,23 @@ from django.contrib.auth.views import LoginView
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import never_cache
 
+from .utils import redirect_by_role
+from roles.models import UserRole
+
+
+
+class CustomLoginView(LoginView):
+    template_name = 'userprofile/login.html'
+
+    def get_success_url(self):
+        return redirect_by_role(self.request.user)
+
 
 @never_cache
 def signup(request):
 
     if request.user.is_authenticated:
-        return redirect('dashboard')  # or 'index'
+        return redirect(redirect_by_role(user))  # or 'index'
 
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -27,12 +38,14 @@ def signup(request):
         if form.is_valid():
             user= form.save()
 
+            UserRole.objects.create(user=user)
+            
             Userprofile.objects.create(user=user)
 
             login(request, user)
 
             messages.success(request, f"Welocme, {user.username}!")
-            return redirect('dashboard')
+            return redirect(redirect_by_role(user))
 
     else:
         form = CustomUserCreationForm()
@@ -43,14 +56,14 @@ def signup(request):
                   }) 
 
 
-# Authentication (login)
-class CustomLoginView(LoginView):
-    template_name = 'userprofile/login.html'
+# # Authentication (login)
+# class CustomLoginView(LoginView):
+#     template_name = 'userprofile/login.html'
 
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return redirect('dashboard')
-        return super().dispatch(request, *args, **kwargs)
+#     def dispatch(self, request, *args, **kwargs):
+#         if request.user.is_authenticated:
+#             return redirect('dashboard')
+#         return super().dispatch(request, *args, **kwargs)
     
 # otp login
 def login_with_otp(request):
@@ -116,7 +129,7 @@ def verify_login_otp(request):
 
             del request.session['login_otp_email']
 
-            return redirect('dashboard')
+            return redirect(redirect_by_role(user))
 
         else:
             messages.error(request, "Invalid or expired OTP.")

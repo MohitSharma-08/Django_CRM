@@ -1,0 +1,87 @@
+{% extends "core/base.html" %}
+{% block title %}Edit User - {{ user_obj.username }}{% endblock %}
+
+{% block content %}
+<div class="max-w-[1400px] mx-auto p-6">
+
+    <div class="text-sm text-zinc-500 mb-4">
+        Home / <a href="{% url 'roles:user_list' %}" class="hover:text-zinc-700">User Management</a> / <span class="text-blue-600 font-medium">Edit User</span>
+    </div>
+
+    <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-zinc-900">Edit User</h1>
+        <p class="text-sm text-zinc-500 mt-1">Update account information and system permissions.</p>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="bg-white rounded-lg border border-zinc-200 p-8 shadow-sm mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                
+                {% for field in form %}
+                    {% if field.name != 'is_active' %}
+                        <div class="flex flex-col gap-2">
+                            <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-zinc-700">
+                                {{ field.label }}
+                            </label>
+                            
+                            {# Adding the outline/border classes directly to the field #}
+                            <div class="relative">
+                                {{ field }}
+                            </div>
+
+                            {% if field.errors %}
+                                {% for error in field.errors %}
+                                    <p class="text-xs text-red-600 mt-1">{{ error }}</p>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <div class="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg border border-zinc-200 md:col-span-2">
+                    <div class="flex items-center h-5">
+                        {{ form.is_active }}
+                    </div>
+                    <div class="text-sm">
+                        <label for="{{ form.is_active.id_for_label }}" class="font-semibold text-zinc-900">Active Account</label>
+                        <p class="text-zinc-500 text-xs">Allow this user to access the dashboard and perform actions.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-2">
+            <a href="{% url 'roles:user_list' %}"
+               class="px-4 py-2 text-sm font-medium border border-zinc-200 rounded-md text-zinc-600 hover:bg-zinc-50 transition-colors">
+                Cancel
+            </a>
+
+            <button type="submit"
+                    class="px-8 py-2.5 text-sm font-semibold rounded-md text-white shadow-sm
+                           bg-zinc-900 hover:bg-zinc-800 transition-all active:scale-95">
+                Update User
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* This ensures your Django form widgets get the same "Outlined" look as your Lead form */
+    input[type="text"], 
+    input[type="email"], 
+    input[type="number"], 
+    select, 
+    textarea {
+        @apply w-full px-3 py-2 bg-white border border-zinc-300 rounded-md shadow-sm outline-none transition-all;
+        @apply focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:shadow-md;
+        @apply text-zinc-900 text-sm placeholder:text-zinc-400;
+    }
+
+    input[type="checkbox"] {
+        @apply w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500 cursor-pointer;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "core/base.html" %}
+
+{% block title %}Permissions{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-6">
+
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-zinc-900">Permissions</h1>
+        <p class="text-sm text-zinc-500 mt-1">
+            Control what each role can access across the system
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="space-y-8">
+
+            {% for group, perms in permission_groups.items %}
+            <div class="bg-white border border-zinc-200 rounded-xl shadow-sm">
+
+                <div class="px-6 py-4 border-b border-zinc-200">
+                    <h2 class="font-semibold text-zinc-900">{{ group }}</h2>
+                </div>
+
+                <div class="p-6 grid grid-cols-5 gap-4 text-sm items-center">
+
+                    <div class="text-zinc-500 font-medium">Permission</div>
+                    <div class="font-medium text-center">Admin</div>
+                    <div class="font-medium text-center">Employee</div>
+                    <div class="font-medium text-center">Client</div>
+                    <div class="font-medium text-center text-zinc-400">Super Admin</div>
+
+                    {% for key, label in perms %}
+                        <div class="capitalize text-zinc-700">{{ label }}</div>
+
+                        <input
+                            type="checkbox"
+                            name="admin_permissions"
+                            value="{{ key }}"
+                            class="w-4 h-4 accent-black justify-self-center cursor-pointer"
+                            {% if key in matrix.admin %}checked{% endif %}
+                        >
+
+                        <input
+                            type="checkbox"
+                            name="employee_permissions"
+                            value="{{ key }}"
+                            class="w-4 h-4 accent-black justify-self-center cursor-pointer"
+                            {% if key in matrix.employee %}checked{% endif %}
+                        >
+
+                        <input
+                            type="checkbox"
+                            name="client_permissions"
+                            value="{{ key }}"
+                            class="w-4 h-4 accent-black justify-self-center cursor-pointer"
+                            {% if key in matrix.client %}checked{% endif %}
+                        >
+
+                        <input
+                            type="checkbox"
+                            checked
+                            disabled
+                            class="w-4 h-4 accent-black opacity-30 justify-self-center cursor-not-allowed"
+                        >
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <div class="mt-8 flex justify-end">
+            <button
+                type="submit"
+                class="px-6 py-2.5 bg-zinc-900 text-white text-sm font-semibold rounded-md hover:bg-zinc-800 transition-all active:scale-95 shadow-sm"
+            >
+                Save Changes
+            </button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
