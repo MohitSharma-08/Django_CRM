@@ -4,12 +4,16 @@
 
 {% block content %}
 <div class="p-6">
+
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Clients</h1>
+
+        {% if "clients.create" in request.user_perms %}
         <a href="{% url 'clients_add' %}"
-           class="px-4 py-2 bg-zinc-900 text-white text-sm font-medium rounded-md hover:bg-zinc-800 transition shadow-sm cursor-pointer">
+           class="px-4 py-2 bg-zinc-900 text-white text-sm font-medium rounded-md hover:bg-zinc-800 transition shadow-sm">
             + Add Client
         </a>
+        {% endif %}
     </div>
 
     {% if clients %}
@@ -17,17 +21,25 @@
         <table class="w-full border-collapse">
             <thead class="bg-zinc-50 border-b border-zinc-200">
                 <tr>
-                    <th class="text-left p-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Name</th>
-                    <th class="text-left p-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Email</th>
+                    <th class="text-left p-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                        Name
+                    </th>
+                    <th class="text-left p-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                        Email
+                    </th>
                 </tr>
             </thead>
             <tbody class="text-sm">
                 {% for client in clients %}
-                <tr class="border-b border-zinc-100 last:border-0 hover:bg-zinc-50 transition-colors">
+                <tr class="border-b border-zinc-100 hover:bg-zinc-50">
                     <td class="p-4 font-medium text-zinc-900">
-                        <a href="{% url 'clients_detail' client.id %}" class="hover:underline underline-offset-4 decoration-zinc-300">
+                        {% if "clients.view" in request.user_perms %}
+                        <a href="{% url 'clients_detail' client.id %}" class="hover:underline">
                             {{ client.name }}
                         </a>
+                        {% else %}
+                            {{ client.name }}
+                        {% endif %}
                     </td>
                     <td class="p-4 text-zinc-600">{{ client.email }}</td>
                 </tr>
@@ -38,8 +50,11 @@
     {% else %}
     <div class="flex flex-col items-center justify-center py-12 border-2 border-dashed border-zinc-200 rounded-xl bg-zinc-50/30">
         <p class="text-zinc-500 text-sm">No clients found.</p>
-        <p class="text-zinc-400 text-xs mt-1">Converted leads will appear here automatically.</p>
+        <p class="text-zinc-400 text-xs mt-1">
+            Converted leads will appear here automatically.
+        </p>
     </div>
     {% endif %}
+
 </div>
 {% endblock %}

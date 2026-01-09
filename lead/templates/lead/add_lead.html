@@ -1,20 +1,13 @@
 {% extends 'core/base.html' %}
-{% load role_permissions %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto p-6">
 
-    {% has_perm "leads.create" as can_create_lead %}
+    {% if "leads.create" in request.user_perms %}
 
     <h1 class="text-2xl font-semibold mb-8">
-        {% if can_create_lead %}
         Create Lead
-        {% else %}
-        <span class="text-red-600">Access denied</span>
-        {% endif %}
     </h1>
-
-    {% if can_create_lead %}
 
     <!-- ================= STEPPER ================= -->
     <div class="flex items-center w-full max-w-4xl mx-auto mb-16">
@@ -23,15 +16,16 @@
 
         <div class="relative flex flex-col items-center group">
             <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 z-10
-                    {% if step >= idx %}
-                        bg-blue-600 border-blue-600 shadow-md shadow-blue-200
-                    {% else %}
-                        bg-white border-zinc-300
-                    {% endif %}">
+                {% if step >= idx %}
+                    bg-blue-600 border-blue-600 shadow-md shadow-blue-200
+                {% else %}
+                    bg-white border-zinc-300
+                {% endif %}">
 
                 {% if step > idx %}
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                          d="M5 13l4 4L19 7"></path>
                 </svg>
                 {% else %}
                 <span class="{% if step == idx %}text-white{% else %}text-zinc-400{% endif %} text-sm font-bold">
@@ -41,27 +35,22 @@
             </div>
 
             <div class="absolute -bottom-10 w-32 text-center">
-                <span class="text-[11px] font-bold uppercase tracking-widest transition-colors duration-300
-                        {% if step == idx %} text-blue-600 {% else %} text-zinc-400 {% endif %}">
+                <span class="text-[11px] font-bold uppercase tracking-widest
+                    {% if step == idx %} text-blue-600 {% else %} text-zinc-400 {% endif %}">
                     {{ label }}
                 </span>
             </div>
         </div>
 
         {% if not forloop.last %}
-        <div class="flex-1 h-[2px] mx-0 transition-colors duration-700
-                {% if step > idx %}
-                    bg-blue-600
-                {% else %}
-                    bg-zinc-200
-                {% endif %}">
+        <div class="flex-1 h-[2px]
+            {% if step > idx %} bg-blue-600 {% else %} bg-zinc-200 {% endif %}">
         </div>
         {% endif %}
 
         {% endwith %}
         {% endfor %}
     </div>
-
     <!-- ================= END STEPPER ================= -->
 
     <h2 class="text-lg font-semibold mb-1">{{ step_title }}</h2>
@@ -74,33 +63,38 @@
 
         <div class="bg-white border rounded-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             {% for field in form %}
-            {% include 'partials/form_field.html' with field=field %}
+                {% include 'partials/form_field.html' with field=field %}
             {% endfor %}
         </div>
 
         <div class="flex justify-between mt-8">
             {% if step > 1 %}
-            <a href="{% url 'add_lead_step' step=step|add:'-1' %}" class="px-4 py-2 border rounded-md">
+            <a href="{% url 'add_lead_step' step=step|add:'-1' %}"
+               class="px-4 py-2 border rounded-md">
                 ← Back
             </a>
             {% else %}
             <div></div>
             {% endif %}
 
-            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md">
+            <button type="submit"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-md">
                 {% if step == total_steps %}
-                Save Lead
+                    Save Lead
                 {% else %}
-                Next →
+                    Next →
                 {% endif %}
             </button>
         </div>
     </form>
 
     {% else %}
-    <div class="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg">
+
+    <!-- Optional UX fallback (page still loads) -->
+    <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-6 rounded-lg">
         You do not have permission to create leads.
     </div>
+
     {% endif %}
 
 </div>

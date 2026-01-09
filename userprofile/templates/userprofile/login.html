@@ -27,25 +27,58 @@
                     placeholder="Enter your username">
             </div>
 
-            <div class="space-y-2">
+            <div class="space-y-2" x-data="{ showPassword: false }">
                 <div class="flex items-center justify-between">
                     <label class="text-sm font-medium leading-none text-zinc-800">
                         Password
                     </label>
-                    <a href="{% url 'forgot_password' %}" class="text-xs text-zinc-500 hover:text-zinc-950 transition-colors">
+                    <a href="{% url 'forgot_password' %}"
+                        class="text-xs text-zinc-500 hover:text-zinc-950 transition-colors">
                         Forgot password?
                     </a>
                 </div>
-                <input type="password" name="password" required
-                    class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 transition-all outline-none"
-                    placeholder="••••••••">
+
+                <div class="relative group">
+                    <input :type="showPassword ? 'text' : 'password'" name="password" required
+                        class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 pr-10 text-sm ring-offset-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 transition-all outline-none"
+                        placeholder="••••••••">
+
+                    <button type="button" @click="showPassword = !showPassword"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-900 transition-colors cursor-pointer focus:outline-none">
+
+                        <svg x-show="!showPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+
+                        <svg x-show="showPassword" x-cloak xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                            <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                            <line x1="2" y1="2" x2="22" y2="22" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
+
+
             {% if form.errors %}
-                <div class="p-3 rounded-md bg-red-50 border border-red-100 flex items-center gap-2 text-xs text-red-600 font-medium">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    Invalid username or password.
-                </div>
+            <div
+                class="p-3 rounded-md bg-red-50 border border-red-100 flex items-center gap-2 text-xs text-red-600 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="shrink-0">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                Invalid username or password.
+            </div>
             {% endif %}
 
             <button type="submit"
@@ -65,14 +98,19 @@
 
         <a href="{% url 'login_otp' %}"
             class="inline-flex items-center justify-center w-full h-10 px-4 py-2 bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-950 text-sm font-medium rounded-md transition-colors shadow-sm cursor-pointer">
-            <svg class="mr-2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+            <svg class="mr-2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="16" height="20" x="4" y="2" rx="2" ry="2" />
+                <path d="M12 18h.01" />
+            </svg>
             Login with OTP
         </a>
 
         <div class="mt-8 text-center pt-6 border-t border-zinc-100">
             <p class="text-sm text-zinc-500">
-                Don’t have an account? 
-                <a href="{% url 'signup' %}" class="font-semibold text-zinc-950 hover:underline underline-offset-4 decoration-zinc-300">
+                Don’t have an account?
+                <a href="{% url 'signup' %}"
+                    class="font-semibold text-zinc-950 hover:underline underline-offset-4 decoration-zinc-300">
                     Sign up
                 </a>
             </p>

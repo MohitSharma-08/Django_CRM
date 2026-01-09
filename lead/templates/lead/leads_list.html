@@ -10,15 +10,21 @@
         <h1 class="text-2xl font-bold text-zinc-900">Leads</h1>
 
         <div class="flex gap-x-2">
+
+            {% if "leads.create" in request.user_perms %}
             <a href="{% url 'add_lead_step' step=1 %}"
                class="px-4 py-2 bg-zinc-900 text-white text-sm font-medium rounded-md hover:bg-zinc-800 transition shadow-sm">
                 + Add Lead
             </a>
+            {% endif %}
 
+            {% if "leads.upload" in request.user_perms %}
             <a href="{% url 'upload_leads' %}"
                class="px-4 py-2 bg-white border border-zinc-200 text-zinc-900 text-sm font-medium rounded-md hover:bg-zinc-50 transition shadow-sm">
                 Upload Leads
             </a>
+            {% endif %}
+
         </div>
     </div>
 
@@ -40,11 +46,13 @@
                         <tr class="border-b border-zinc-100 hover:bg-zinc-50 transition-colors">
 
                             <!-- Lead Name -->
+                            {% if "leads.view" in request.user_perms %}
                             <td class="p-4 font-medium text-zinc-900">
                                 <a href="{% url 'leads_detail' lead.id %}" class="hover:underline">
                                     {{ lead.lead_name }}
                                 </a>
                             </td>
+                            {% endif %}
 
                             <!-- Email -->
                             <td class="p-4 text-zinc-600">

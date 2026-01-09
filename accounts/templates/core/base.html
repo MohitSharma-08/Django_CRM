@@ -19,29 +19,51 @@
         [x-cloak] {
             display: none !important;
         }
+
+        /* Custom Scrollbar for a cleaner Zinc look */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e4e4e7;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d4d4d8;
+        }
     </style>
 </head>
 
-<body class="min-h-screen bg-white text-zinc-950" x-data="{ sidebarOpen: true }">
+<body class="h-screen overflow-hidden bg-white text-zinc-950 flex flex-col" x-data="{ 
+    sidebarOpen: localStorage.getItem('sidebarOpen') !=='false', 
+    toggle() {
+        this.sidebarOpen = !this.sidebarOpen;
+        localStorage.setItem('sidebarOpen', this.sidebarOpen);
+    } 
+  }"
+>
 
-    <!-- BACKDROP -->
     <div x-show="sidebarOpen" @click="sidebarOpen = false"
         class="fixed inset-0 z-40 bg-zinc-950/20 backdrop-blur-sm md:hidden"
-        x-transition:enter="transition opacity ease-out duration-300" x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100" x-transition:leave="transition opacity ease-in duration-200"
-        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        x-transition:enter="transition opacity ease-out duration-300" 
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" 
+        x-transition:leave="transition opacity ease-in duration-200"
+        x-transition:leave-start="opacity-100" 
+        x-transition:leave-end="opacity-0">
     </div>
 
-    <!-- HEADER -->
-    <header class="sticky top-0 z-30 w-full border-b border-zinc-200 bg-white/80 backdrop-blur-md">
+    <header class="flex-none z-30 w-full border-b border-zinc-200 bg-white/80 backdrop-blur-md">
         <div class="flex items-center justify-between px-4 h-14">
 
-            <!-- LEFT -->
             <div class="flex items-center gap-4">
-                <button x-show="!sidebarOpen" @click="sidebarOpen = true"
-                    class="p-2 rounded-md hover:bg-zinc-100 transition-colors cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
+                <button @click="sidebarOpen = !sidebarOpen"
+                    class="p-2 rounded-md hover:bg-zinc-100 transition-colors cursor-pointer text-zinc-600 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="3" x2="21" y1="6" y2="6" />
                         <line x1="3" x2="21" y1="12" y2="12" />
                         <line x1="3" x2="21" y1="18" y2="18" />
@@ -52,187 +74,139 @@
                     {% if app_setting.logo %}
                     <img src="{{ app_setting.logo.url }}" alt="logo" class="h-7 w-auto object-contain">
                     {% else %}
-                    <span class="text-sm font-semibold tracking-tight">
+                    <span class="text-sm font-semibold tracking-tight uppercase">
                         {{ app_setting.app_name|default:"Teal CRM" }}
                     </span>
                     {% endif %}
                 </a>
             </div>
 
-            <!-- RIGHT -->
             <div class="flex items-center gap-2">
-                {% if request.user.is_authenticated %}
+                {% if request.show_app_shell %}
                 <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-
                     <button @click="open = !open"
                         class="flex items-center gap-2 p-1 rounded-full hover:bg-zinc-100 transition cursor-pointer">
-
                         {% with request.user.account_profile as ap %}
                         {% if ap and ap.avatar %}
                         <img src="{{ ap.avatar.url }}" class="w-8 h-8 rounded-full object-cover">
                         {% else %}
-                        <div class="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center
-                                        text-[10px] text-white font-medium uppercase">
+                        <div class="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-[10px] text-white font-medium uppercase">
                             {{ request.user.username|slice:":2" }}
                         </div>
                         {% endif %}
                         {% endwith %}
-
-                        <div>{{ request.user.username }}</div>
+                        <div class="text-sm font-medium text-zinc-700 hidden sm:block">{{ request.user.username }}</div>
                     </button>
 
-                    <!-- DROPDOWN -->
-                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute right-0 w-56 bg-white border border-zinc-200
-                            rounded-md shadow-md py-1 px-1">
-
-                        <div class="px-2 py-1.5 text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
-                            Account
-                        </div>
-
-                        <a href="{% url 'profile' %}" class="block px-2 py-1.5 text-sm rounded-sm
-                              hover:bg-zinc-100 text-zinc-700">
-                            Profile
-                        </a>
-
+                    <div x-show="open" x-cloak @click.outside="open = false" 
+                         class="absolute right-0 mt-1 w-56 bg-white border border-zinc-200 rounded-md shadow-lg py-1 px-1">
+                        <div class="px-2 py-1.5 text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Account</div>
+                        <a href="{% url 'profile' %}" class="block px-2 py-1.5 text-sm rounded-sm hover:bg-zinc-100 text-zinc-700">Profile</a>
                         <div class="my-1 border-t border-zinc-100"></div>
-
                         <form method="post" action="{% url 'logout' %}">
                             {% csrf_token %}
-                            <button type="submit" class="w-full text-left px-2 py-1.5 text-sm
-                                       text-red-600 rounded-sm hover:bg-red-50 cursor-pointer">
-                                Log out
-                            </button>
+                            <button type="submit" class="w-full text-left px-2 py-1.5 text-sm text-red-600 rounded-sm hover:bg-red-50 cursor-pointer">Log out</button>
                         </form>
                     </div>
                 </div>
-                {% else %}
-                <a href="{% url 'login' %}" class="px-3 py-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-950">
-                    Log in
-                </a>
-                <a href="{% url 'signup' %}" class="px-3 py-1.5 text-sm font-medium bg-zinc-900 text-white
-                          rounded-md hover:bg-zinc-800 shadow-sm">
-                    Sign up
-                </a>
                 {% endif %}
             </div>
         </div>
     </header>
 
-    <div class="flex">
-        {% if request.user.is_authenticated %}
-        <aside x-show="sidebarOpen" x-cloak class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-zinc-200
-              transition-transform md:static md:translate-x-0"
+    <div class="flex flex-1 overflow-hidden">
+        
+        {% if request.show_app_shell %}
+        <aside x-show="sidebarOpen" x-cloak 
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-zinc-200 transition-transform md:static md:translate-x-0 flex flex-col overflow-hidden"
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
 
-            <div class="flex items-center justify-between px-4 h-14 border-b border-zinc-100">
+            <div class="flex-none flex items-center justify-between px-4 h-14 border-b border-zinc-100">
                 <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Menu</span>
                 <button @click="sidebarOpen = false"
-                    class="p-1.5 hover:bg-zinc-100 rounded-md text-zinc-500 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
+                    class="p-1.5 hover:bg-zinc-100 rounded-md text-zinc-900 transition-colors flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18" />
                         <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                 </button>
             </div>
 
-            <!-- SIDEBAR NAV (UNCHANGED) -->
-            <nav class="p-3 h-[calc(100vh-3.5rem)]">
-                <div class="space-y-1">
-                    <a href="{% url 'dashboard' %}"
-                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
-                       {% if request.resolver_match.url_name == 'dashboard' %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
-                        <svg class="mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect width="7" height="9" x="3" y="3" rx="1" />
-                            <rect width="7" height="5" x="14" y="3" rx="1" />
-                            <rect width="7" height="9" x="14" y="12" rx="1" />
-                            <rect width="7" height="5" x="3" y="15" rx="1" />
-                        </svg>
-                        Dashboard
-                    </a>
+            <nav class="flex-1 overflow-y-auto p-3 space-y-1">
+                <a href="{% url 'dashboard' %}"
+                    class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
+                    {% if request.resolver_match.url_name == 'dashboard' %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
+                    <div class="w-6 h-6 flex items-center justify-center mr-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="15" rx="1" /></svg>
+                    </div>
+                    Dashboard
+                </a>
 
-                    <a href="{% url 'leads_list' %}"
-                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
-    {% if request.resolver_match.url_name == 'leads_list' %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
-                        <svg class="mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                            <circle cx="9" cy="7" r="4" />
-                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                        </svg>
-                        Leads
-                    </a>
+                {% if request.sidebar.leads %}
+                <a href="{% url 'leads_list' %}"
+                    class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
+                    {% if 'leads' in request.path %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
+                    <div class="w-6 h-6 flex items-center justify-center mr-2 text-zinc-500">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                    </div>
+                    Leads
+                </a>
+                {% endif %}
 
-                    <a href="{% url 'leads_pipeline' %}"
-                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
-    {% if request.resolver_match.url_name == 'leads_pipeline' %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
-                        <svg class="mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect width="18" height="18" x="3" y="3" rx="2" />
-                            <path d="M9 3v18" />
-                            <path d="M15 3v18" />
-                        </svg>
-                        Sales Pipeline
-                    </a>
+                {% if request.sidebar.pipeline %}
+                <a href="{% url 'leads_pipeline' %}"
+                    class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
+                    {% if 'pipeline' in request.path %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
+                    <div class="w-6 h-6 flex items-center justify-center mr-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M9 3v18" /><path d="M15 3v18" /></svg>
+                    </div>
+                    Sales Pipeline
+                </a>
+                {% endif %}
 
-                    <a href="{% url 'clients_list' %}"
-                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
-                       {% if 'clients' in request.path %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
-                        <svg class="mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                        </svg>
-                        Clients
-                    </a>
+                {% if request.sidebar.clients %}
+                <a href="{% url 'clients_list' %}"
+                    class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
+                    {% if 'clients' in request.path %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
+                    <div class="w-6 h-6 flex items-center justify-center mr-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                    </div>
+                    Clients
+                </a>
+                {% endif %}
 
-                    {% if request.user.is_authenticated and request.user.role.role == 'superadmin' %}
-                    <a href="{% url 'roles:user_list' %}" class="flex items-center gap-2 px-3 py-2 text-[15px] font-medium rounded-md transition-colors
-              text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900
-              {% if request.resolver_match.url_name == 'user_list' %}bg-zinc-100 text-zinc-900{% endif %}">
+                {% if request.sidebar.roles %}
+                <a href="{% url 'roles:user_list' %}" 
+                   class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
+                    {% if 'roles' in request.path %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
+                    <div class="w-6 h-6 flex items-center justify-center mr-2 text-zinc-500">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /><path d="M12 8a2 2 0 1 0 0 4 2 2 0 1 0 0-4" /><path d="M8 17a4 4 0 0 1 8 0" /></svg>
+                    </div>
+                    Role Management
+                </a>
+                {% endif %}
 
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
-                            class="text-zinc-500">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                            <path d="M12 8a2 2 0 1 0 0 4 2 2 0 1 0 0-4" />
-                            <path d="M8 17a4 4 0 0 1 8 0" />
-                        </svg>
-
-                        <span>Role Management</span>
-                    </a>
-                    {% endif %}
-
-
-                    <a href="{% url 'app_settings' %}"
-                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
-                         {% if 'myaccount' in request.path %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
-                        <svg class="mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path
-                                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z">
-                            </path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        Settings
-                    </a>
-                </div>
+                {% if request.sidebar.settings %}
+                <a href="{% url 'app_settings' %}"
+                    class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
+                    {% if 'settings' in request.path %} bg-zinc-100 text-zinc-900 {% else %} text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 {% endif %}">
+                    <div class="w-6 h-6 flex items-center justify-center mr-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"></circle></svg>
+                    </div>
+                    Settings
+                </a>
+                {% endif %}
             </nav>
         </aside>
         {% endif %}
 
-        <main class="flex-1 min-w-0 bg-white min-h-screen">
+        <main class="flex-1 overflow-y-auto bg-white min-w-0">
             {% if messages %}
-            <div class="px-6 mt-4 max-w-4xl mx-auto space-y-2">
+            <div class="sticky top-0 z-20 px-6 pt-4 max-w-4xl mx-auto space-y-2 pointer-events-none">
                 {% for message in messages %}
-                <div class="flex items-center justify-between px-3 py-2 text-xs border rounded-md shadow-sm
-            {% if message.tags == 'success' %}
-                bg-zinc-900 text-white border-zinc-900
-            {% else %}
-                bg-white text-zinc-900 border-zinc-200
-            {% endif %}">
+                <div class="flex items-center justify-between px-3 py-2 text-xs border rounded-md shadow-lg pointer-events-auto
+                    {% if message.tags == 'success' %} bg-zinc-900 text-white border-zinc-900 {% else %} bg-white text-zinc-900 border-zinc-200 {% endif %}">
                     <span>{{ message }}</span>
                     <button onclick="this.parentElement.remove()"
                         class="ml-4 opacity-50 hover:opacity-100 cursor-pointer">✕</button>
@@ -243,11 +217,16 @@
 
             <div class="px-8 py-8">
                 {% block content %}{% endblock %}
-                {% block scripts %}{% endblock %}
             </div>
         </main>
     </div>
 
+    <script>
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
 </body>
-
 </html>

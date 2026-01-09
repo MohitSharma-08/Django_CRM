@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render,redirect
+from django.shortcuts import render
 from django.views.decorators.cache import never_cache
 
 from client.models import Client
@@ -10,15 +10,11 @@ from lead.models import Lead
 @never_cache
 def dashboard(request):
     # Leads owned by the logged-in user
-    if request.user.role.role == 'client':
-        return redirect('index')
-
     leads = Lead.objects.filter(
-        lead_owner=request.user,        
+        lead_owner=request.user,
         deleted_at__isnull=True
     )
 
-    # Clients created by the user (Client model DOES have created_by)
     total_clients = Client.objects.filter(
         created_by=request.user
     ).count()

@@ -22,6 +22,8 @@ from roles.models import UserRole
 class CustomLoginView(LoginView):
     template_name = 'userprofile/login.html'
 
+    redirect_authenticated_user = True
+
     def get_success_url(self):
         return redirect_by_role(self.request.user)
 

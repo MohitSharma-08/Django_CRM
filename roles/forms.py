@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from .models import UserRole
 
+from .models import Permission, PermissionGroup
 
 class UserEditForm(forms.ModelForm):
     role = forms.ChoiceField(choices=UserRole.ROLE_CHOICES)
@@ -33,3 +34,17 @@ class UserEditForm(forms.ModelForm):
 
 class UserUploadForm(forms.Form):
     file = forms.FileField()
+
+
+
+
+class PermissionGroupForm(forms.ModelForm):
+    class Meta:
+        model = PermissionGroup
+        fields = ["name"]
+
+
+class PermissionForm(forms.ModelForm):
+    class Meta:
+        model = Permission
+        fields = ["group", "key", "label"]

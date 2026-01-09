@@ -71,7 +71,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'roles.middleware.PermissionMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'userprofile.middleware.SecurityHeadersMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     "crm.middleware.RedirectAuthenticatedUserMiddleware",
@@ -91,6 +93,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 # Add yours here directly
                 'crm.context_processors.app_settings',
+                'userprofile.context_processors.sidebar_visibility',
             ],
         },
     },

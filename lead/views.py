@@ -135,6 +135,10 @@ def lead_wizard(request, step=1, pk=None):
 
 @login_required
 def leads_list(request):
+    print("AUTH:", request.user.is_authenticated)
+    print("ROLE:", getattr(request.user.role, "role", None))
+    print("PERMS:", request.user_perms)
+    
     leads = Lead.objects.filter(
         lead_owner=request.user,
         deleted_at__isnull=True,

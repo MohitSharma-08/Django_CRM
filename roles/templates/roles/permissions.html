@@ -1,86 +1,123 @@
 {% extends "core/base.html" %}
+{% load rbac %}
 
-{% block title %}Permissions{% endblock %}
+{% block title %}Permissions Management{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto p-6">
 
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-zinc-900">Permissions</h1>
-        <p class="text-sm text-zinc-500 mt-1">
-            Control what each role can access across the system
-        </p>
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-zinc-900">System Permissions</h1>
+            <p class="text-sm text-zinc-500 mt-1">
+                Control what each role can access across the system
+            </p>
+        </div>
+
+        <!-- ADD GROUP -->
+        {% if request.user.role.role == "superadmin" or request.user_perms|has_any:"settings.permissions.add_group" %}
+        <form method="post" class="flex gap-2 w-full md:w-auto">
+            {% csrf_token %}
+            <div class="w-full md:w-64">
+                <input type="text" name="name" placeholder="New Group Name..." required
+                    class="w-full h-10 px-3 bg-white border border-zinc-300 rounded-md shadow-sm outline-none focus:border-zinc-900 text-sm">
+            </div>
+            <button type="submit" name="add_group"
+                class="h-10 px-4 bg-zinc-900 text-white rounded-md text-sm font-semibold cursor-pointer hover:bg-zinc-800 transition-all">
+                + Add Group
+            </button>
+        </form>
+        {% endif %}
     </div>
 
+    <!-- MATRIX -->
     <form method="post">
         {% csrf_token %}
 
         <div class="space-y-8">
+            {% for group in groups %}
+            <div class="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
 
-            {% for group, perms in permission_groups.items %}
-            <div class="bg-white border border-zinc-200 rounded-xl shadow-sm">
+                <!-- GROUP HEADER -->
+                <div class="px-6 py-4 border-b border-zinc-200 flex flex-col lg:flex-row justify-between items-center gap-4">
+                    <h2 class="font-semibold text-zinc-900">{{ group.name }}</h2>
 
-                <div class="px-6 py-4 border-b border-zinc-200">
-                    <h2 class="font-semibold text-zinc-900">{{ group }}</h2>
+                    <!-- ADD PERMISSION -->
+                    {% if request.user.role.role == "superadmin" or request.user_perms|has_any:"settings.permissions.add_permission" %}
+                    <div class="flex items-end gap-3">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] uppercase font-bold text-zinc-400">Key</label>
+                            <input type="text" name="new_key_{{ group.id }}" placeholder="key"
+                                class="h-8 px-2 text-xs border border-zinc-300 rounded-md focus:border-zinc-900 outline-none">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] uppercase font-bold text-zinc-400">Label</label>
+                            <input type="text" name="new_label_{{ group.id }}" placeholder="Label"
+                                class="h-8 px-2 text-xs border border-zinc-300 rounded-md focus:border-zinc-900 outline-none">
+                        </div>
+                        <button type="submit" name="add_permission_to_group" value="{{ group.id }}"
+                            class="h-8 px-4 bg-white border border-zinc-300 text-zinc-700 rounded-md text-xs font-bold hover:bg-zinc-50 transition-colors cursor-pointer">
+                            Add
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
 
+                <!-- PERMISSION GRID -->
                 <div class="p-6 grid grid-cols-5 gap-4 text-sm items-center">
-
                     <div class="text-zinc-500 font-medium">Permission</div>
-                    <div class="font-medium text-center">Admin</div>
-                    <div class="font-medium text-center">Employee</div>
-                    <div class="font-medium text-center">Client</div>
+                    <div class="font-medium text-center text-zinc-900">Client</div>
+                    <div class="font-medium text-center text-zinc-900">Employee</div>
+                    <div class="font-medium text-center text-zinc-900">Admin</div>
                     <div class="font-medium text-center text-zinc-400">Super Admin</div>
 
-                    {% for key, label in perms %}
-                        <div class="capitalize text-zinc-700">{{ label }}</div>
+                    {% for perm in group.permissions.all %}
+                        <div class="text-zinc-700 capitalize">{{ perm.label }}</div>
 
-                        <input
-                            type="checkbox"
-                            name="admin_permissions"
-                            value="{{ key }}"
-                            class="w-4 h-4 accent-black justify-self-center cursor-pointer"
-                            {% if key in matrix.admin %}checked{% endif %}
-                        >
+                        {% for role in roles %}
 
-                        <input
-                            type="checkbox"
-                            name="employee_permissions"
-                            value="{{ key }}"
-                            class="w-4 h-4 accent-black justify-self-center cursor-pointer"
-                            {% if key in matrix.employee %}checked{% endif %}
-                        >
+                            {% if role == "superadmin" %}
+                                <!-- SUPERADMIN: always checked, read-only -->
+                                <input type="checkbox" checked disabled
+                                    class="w-4 h-4 accent-black opacity-30 justify-self-center cursor-not-allowed">
 
-                        <input
-                            type="checkbox"
-                            name="client_permissions"
-                            value="{{ key }}"
-                            class="w-4 h-4 accent-black justify-self-center cursor-pointer"
-                            {% if key in matrix.client %}checked{% endif %}
-                        >
+                            {% else %}
+                                <input type="checkbox"
+                                    name="{{ role }}_permissions"
+                                    value="{{ perm.key }}"
+                                    class="w-4 h-4 accent-black justify-self-center cursor-pointer"
 
-                        <input
-                            type="checkbox"
-                            checked
-                            disabled
-                            class="w-4 h-4 accent-black opacity-30 justify-self-center cursor-not-allowed"
-                        >
+                                    {% if perm.key in matrix|get_item:role %}checked{% endif %}
+
+                                    {% if not request.user.role.role == "superadmin" %}
+                                        {% if not request.user_perms|has_any:"settings.permissions.edit" %}
+                                            disabled
+                                        {% endif %}
+                                    {% endif %}
+                                >
+                            {% endif %}
+
+                        {% endfor %}
+                    {% empty %}
+                        <div class="col-span-5 text-center py-4 text-zinc-400 italic">
+                            No permissions in this group yet.
+                        </div>
                     {% endfor %}
                 </div>
             </div>
             {% endfor %}
-
         </div>
 
+        <!-- SAVE BUTTON -->
+        {% if request.user.role.role == "superadmin" or request.user_perms|has_any:"settings.permissions.edit" %}
         <div class="mt-8 flex justify-end">
-            <button
-                type="submit"
-                class="px-6 py-2.5 bg-zinc-900 text-white text-sm font-semibold rounded-md hover:bg-zinc-800 transition-all active:scale-95 shadow-sm"
-            >
+            <button type="submit" name="save_permissions"
+                class="px-6 py-2.5 bg-zinc-900 text-white text-sm font-semibold rounded-md hover:bg-zinc-800 transition-all active:scale-95 shadow-sm cursor-pointer">
                 Save Changes
             </button>
         </div>
-
+        {% endif %}
     </form>
 </div>
 {% endblock %}
